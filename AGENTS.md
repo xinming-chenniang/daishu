@@ -87,7 +87,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |
 | `node tools/art_check.mjs <info\|palette\|grid\|watermark\|crop> <图>` | 美术素材校验 | 见第 6 节 |
 | `node tools/balance_sim.mjs` | 数值蒙特卡洛 | 见 `docs\BALANCE_REPORT.md` |
-| `node tools/balance_sim.mjs --targets 500,525,550` | 目标金额细扫（也支持 `--stall/--npc/--start/--games/--bonus-mul`）| 见 `docs\CONTENT_PROPOSAL.md` |
+| `node tools/balance_sim.mjs --targets 500,525,550` | 目标金额细扫（也支持 `--stall/--npc/--start/--games/--bonus-mul/--pool`）| 见 `docs\CONTENT_PROPOSAL.md` |
 | `python tools/check_content_chars.py` | 候选内容的汉字是否都在项目字体字形表里 | `[OK] 全部覆盖` |
 
 **纪律**：项目文档 > 对话印象。**PPT/结论要先跑验证**；改完先自己验一遍再交付。

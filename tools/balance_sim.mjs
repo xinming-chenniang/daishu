@@ -5,7 +5,10 @@
 //   scripts/JudgeSystem.gd  — 三档判定与计费
 //   scripts/PlayerManager.gd— 起始金钱/摊位费/结局规则
 
-const POOL = { salutation: 3, body: 6, signature: 3 }; // 各槽位词库大小(阶段1扩充后)
+// 各槽位词库大小（当前实现：称谓 3 / 正文 6 / 落款 3）
+// 可用 --pool 覆盖，用来评估"扩充词库后瞎蒙难度"（docs/CONTENT_PROPOSAL.md 方案 A）
+const DEFAULT_POOL = { salutation: 3, body: 6, signature: 3 };
+let POOL = { ...DEFAULT_POOL };
 
 function baseFee(day) { return 12 + Math.floor((day - 1) / 3); }
 function perfectBonus(day) { return 8 + (day - 1); }
@@ -100,9 +103,10 @@ function simulate(cfg, mode, games) {
 //   node tools/balance_sim.mjs --targets 500,525,550,575,600   # 细扫目标值
 //   node tools/balance_sim.mjs --bonus-mul 0.75 --targets 500,525
 //   node tools/balance_sim.mjs --games 50000 --stall 12
+//   node tools/balance_sim.mjs --pool 5,10,4        # 评估扩充词库后的瞎蒙难度
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const out = { targets: null, overrides: {} };
+  const out = { targets: null, overrides: {}, pool: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     const v = argv[i + 1];
@@ -115,13 +119,24 @@ function parseArgs(argv) {
       case '--games': out.games = Number(v); i++; break;
       case '--bonus-mul': out.overrides.bonusMul = Number(v); i++; break;
       case '--base-add': out.overrides.baseAdd = Number(v); i++; break;
+      case '--pool': {
+        const nums = String(v).split(',').map(Number);
+        if (nums.length === 3 && nums.every((n) => Number.isFinite(n) && n > 0)) {
+          out.pool = { salutation: nums[0], body: nums[1], signature: nums[2] };
+        } else {
+          console.error('--pool 需要三个正整数：称谓,正文,落款（例：--pool 5,10,4）');
+          process.exit(2);
+        }
+        i++;
+        break;
+      }
       case '--targets':
         out.targets = String(v).split(',').map(Number).filter((n) => Number.isFinite(n));
         i++;
         break;
       default:
         if (k.startsWith('--')) {
-          console.error(`未知参数：${k}（可用：--target --stall --npc --start --days --games --bonus-mul --base-add --targets）`);
+          console.error(`未知参数：${k}（可用：--target --stall --npc --start --days --games --bonus-mul --base-add --pool --targets）`);
           process.exit(2);
         }
     }
@@ -130,6 +145,14 @@ function parseArgs(argv) {
 }
 
 const CLI = parseArgs(process.argv.slice(2));
+if (CLI.pool) POOL = { ...CLI.pool };
+
+// 池内均匀乱选时的直觉概率（与"命中率"策略无关，只看词库大小）
+function accidentalStats(pool) {
+  const perSlot = [1 / pool.salutation, 1 / pool.body, 1 / pool.body, 1 / pool.body, 1 / pool.signature];
+  const perfect = perSlot.reduce((a, b) => a * b, 1);
+  return { perSlot, perfect };
+}
 
 const GAMES = CLI.games && Number.isFinite(CLI.games) && CLI.games > 0 ? CLI.games : 20000;
 const BASE_CFG = {
@@ -151,7 +174,26 @@ const strategies = [
   ['不看故事（池内随机）', { random: true }],
 ];
 
-console.log('========== 当前数值 (10天/3NPC/摊位10/目标500/起始100) ==========');
+// 词库规模直接决定"瞎蒙"的难度：先把这个直觉概率打出来
+{
+  const fmtPct = (x) => `${(x * 100).toFixed(2)}%`;
+  const line = (label, pool) => {
+    const s = accidentalStats(pool);
+    const oneIn = Number.isFinite(1 / s.perfect) ? Math.round(1 / s.perfect) : Infinity;
+    return `${label} 称谓${pool.salutation}/正文${pool.body}/落款${pool.signature}：` +
+      `单槽 ${s.perSlot.map(fmtPct).join(' / ')} → 单委托五项全对 ${fmtPct(s.perfect)}（约 1/${oneIn}）`;
+  };
+  console.log('========== 瞎蒙命中率（每槽在池内均匀乱选） ==========');
+  if (CLI.pool) {
+    console.log(line('默认（当前实现）', DEFAULT_POOL));
+    console.log(line('扩充后（--pool）', POOL));
+  } else {
+    console.log(line('当前', POOL));
+  }
+  console.log('  ↳ 扩充词库不改变"读懂故事"的玩家，只让蒙答案更难（方案 A 的效果就靠这一行量化）');
+}
+
+console.log('\n========== 当前数值 (10天/3NPC/摊位10/目标500/起始100) ==========');
 for (const [name, mode] of strategies) {
   const s = simulate(BASE_CFG, mode, GAMES);
   console.log(`${name.padEnd(28)} 成功 ${(s.successRate * 100).toFixed(1)}% | 负钱失败 ${(s.failNegRate * 100).toFixed(1)}% | 未达标 ${(s.failTargetRate * 100).toFixed(1)}% | 终局钱 p10/p50/p90 = ${s.p10}/${s.p50}/${s.p90}`);

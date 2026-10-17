@@ -62,7 +62,9 @@
 | 故事模板 | 16 → **26** 条 |
 
 - **数值影响 ≈ 0**：模拟里的"命中率"是玩家能力参数，与词库大小无关；
-  但**瞎蒙更难**（每槽 1/6 → 1/10），"偶尔蒙对"会减少 —— 方向正确。
+  但**瞎蒙更难** —— 已量化（`node tools/balance_sim.mjs --pool 5,10,4`）：
+  单槽命中率 `33/17/17/17/33%` → `20/10/10/10/25%`，**单委托五项全对从 0.05%（约 1/1944）降到 0.01%（约 1/20000）**。
+  方向正确：读故事的玩家不变，蒙答案的人被挡掉。
 - **必须同时改一处 UI**：`letter.gd::_build_word_pools()` 现在是**每个正文槽一个 HBox**，
   6 个按钮刚好占满左栏；变 10 个会横向溢出。
   改法：把该行的 `HBoxContainer` 换成 `HFlowContainer`（自动换行），**改完必须重截代写界面**。
@@ -137,6 +139,7 @@ node tools/balance_sim.mjs
 node tools/balance_sim.mjs --targets 500,525,550,575,600
 node tools/balance_sim.mjs --bonus-mul 0.75 --targets 500,525
 node tools/balance_sim.mjs --games 50000 --stall 12
+node tools/balance_sim.mjs --pool 5,10,4        # 扩充词库后的瞎蒙难度（含与默认的对比）
 
 # 候选字字体覆盖（Python/fontTools，查字体 cmap）
 python tools/check_content_chars.py
