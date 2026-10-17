@@ -81,6 +81,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_judge.gd` | 四档判定与优先级（留空/词库外词 → WRONG，不叠加底薪）| `结论: PASS` |
 | `--script res://tools/verify_save.gd` | 存读档往返 / 坏档 / 版本过新 / 旧档兼容 | `结论: PASS` |
 | `--script res://tools/verify_cursor.gd` | 毛笔光标素材（尺寸/透明底/热点）+ 设置调用不报错 | `结论: PASS` |
+| `--script res://tools/verify_content.gd` | NPC 数据不变量（正解⊆词库、同槽无重复、故事含正解、报酬公式）+ 字体覆盖 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>]` | 任意场景截图 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |

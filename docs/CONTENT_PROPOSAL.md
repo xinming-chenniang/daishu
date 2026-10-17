@@ -68,7 +68,10 @@
   改法：把该行的 `HBoxContainer` 换成 `HFlowContainer`（自动换行），**改完必须重截代写界面**。
 - 候选词表已备好：[`data/content_candidates_2026-10-18.json`](../data/content_candidates_2026-10-18.json)，
   **85 条、181 个不同汉字，全部能在 `hanchanlongcang.otf` 字形表里找到**（见 §四）。
-- 工作量：改数据 + 改一处容器 + 重截 + 新增 `verify_drop` 抽样（约半天）。
+- **验收闸门已就位**：接入前后都跑 `--script res://tools/verify_content.gd`
+  —— 它检查"正解⊆词库 / 同槽无重复 / 故事含三个正解 / 报酬公式 / 称谓·正文·落款用字都有字形"，
+  并抽样 1200 个 NPC（实测当前数据全过、152 个用字 0 缺字）。**扩充词库后它就是验收标准。**
+- 工作量：改数据 + 改一处容器 + 重截 + 跑 `verify_content` / `verify_drop`（约半天）。
 
 ### 方案 B：收紧张力（只调数值，可与 A 叠加）
 
@@ -135,6 +138,9 @@ node tools/balance_sim.mjs --targets 500,525,550,575,600
 node tools/balance_sim.mjs --bonus-mul 0.75 --targets 500,525
 node tools/balance_sim.mjs --games 50000 --stall 12
 
-# 候选字字体覆盖
+# 候选字字体覆盖（Python/fontTools，查字体 cmap）
 python tools/check_content_chars.py
+
+# 接入后的数据不变量 + 字体覆盖（Godot 侧，抽样 1200 个 NPC）
+pwsh -File tools\run-godot.ps1 --headless --script res://tools/verify_content.gd
 ```
