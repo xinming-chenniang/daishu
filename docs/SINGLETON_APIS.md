@@ -6,33 +6,35 @@
 | day_changed | 信号 | new_day: int | - | 天数变化时发出，传递当前天数 |
 | day_ledger_changed | 信号 | - | - | 每日流水变更时发出（新增或重置） |
 | STALL_FEE_PER_DAY | 常量 | - | int | 每日固定支出（摊位+房租+米钱等） |
-| SAVE_PATH | 常量 | - | String | 存档文件路径 `user://save.dat` |
+| SAVE_PATH | 常量 | - | String | 存档文件默认路径 `user://save.dat` |
+| SAVE_VERSION | 常量 | - | int | **存档格式版本**（当前 1）。改字段语义/结构时必须 +1，并给 `apply_save_data()` 补迁移分支 |
 | TOTAL_DAYS | 常量 | - | int | 总天数上限（赶考期限，当前为 10 天） |
 | TARGET_MONEY | 常量 | - | int | 目标金额（进京路费，当前为 500 文） |
 | completed_npcs | 属性 | - | Array[int] | 当前天已完成的 NPC id 列表 |
 | money | 属性 | - | int | 当前金钱；赋值时会触发 `money_changed` 信号 |
 | day | 属性 | - | int | 当前天数（第几日）；赋值时会触发 `day_changed` 信号 |
 | day_ledger | 属性 | - | Array[Dictionary] | 当日收支流水明细 |
-| add_money | 方法 | amount: int | void | 增加/减少金钱，若结果为负则立即触发失败结局 |
-| next_day | 方法 | - | void | 天数加一；若超出 `TOTAL_DAYS` 则调用 `check_endgame` 进行结局判定 |
+| save_path | 属性 | - | String | **实际读写的存档路径**，默认 `SAVE_PATH`；回归脚本（`tools/verify_save.gd`）改它以免覆盖玩家存档 |
+| add_money | 方法 | amount: int | bool | 增加/减少金钱；返回 **true = 这次调用把钱扣成负数**（已请求切到失败结局），调用方应停止后续 UI 操作 |
+| next_day | 方法 | - | bool | 天数加一；返回 **true = 已触发结局**（第 10 天之后），调用方应停止后续 UI 操作 |
 | is_npc_completed | 方法 | npc_id: int | bool | 判断指定 NPC id 在当前天是否已完成 |
 | mark_npc_completed | 方法 | npc_id: int | void | 将指定 NPC 标记为已完成，避免重复接同一委托 |
 | reset_completed_npcs | 方法 | - | void | 清空当日已完成 NPC 列表（通常在结束当日时调用） |
 | record_entry | 方法 | kind: String, amount: int, desc: String, meta: Dictionary = {} | void | 向每日流水中追加一条收支记录并发出 `day_ledger_changed` |
 | get_day_summary | 方法 | - | Dictionary | 汇总当日收入、支出、摊位费和净收益，并返回包含这些字段的字典 |
-| apply_end_of_day_costs | 方法 | - | void | 按 `STALL_FEE_PER_DAY` 扣除每日固定支出（摊位+房租+米钱） |
+| apply_end_of_day_costs | 方法 | - | bool | 按 `STALL_FEE_PER_DAY` 扣除固定支出；返回 true = 交完就破产（调用方应立即停止结算流程） |
 | reset_day_ledger | 方法 | - | void | 清空当日流水并发出 `day_ledger_changed` 信号 |
 | reset | 方法 | - | void | 重置为新游戏状态（钱=100、天数=1，清空完成 NPC 和流水） |
 | check_endgame | 方法 | - | void | 根据当前 `money` 与 `TARGET_MONEY` 判定胜负并切换到成功/失败场景 |
 | show_success_scene | 方法 | - | void | 切换到胜利结局场景 `success.tscn` |
 | show_failure_scene | 方法 | - | void | 切换到失败结局场景 `gameover.tscn` |
-| get_save_data | 方法 | - | Dictionary | 序列化当前玩家状态（钱、天数、完成 NPC、流水）为字典 |
-| apply_save_data | 方法 | data: Dictionary | void | 将字典中的存档数据应用到当前玩家状态并发出 `day_ledger_changed` |
-| save_game | 方法 | - | void | 将当前状态序列化后写入 `SAVE_PATH`，若写入失败会输出错误 |
-| load_game | 方法 | - | void | 从 `SAVE_PATH` 读取并解析存档，成功时调用 `apply_save_data` |
-| has_save | 方法 | - | bool | 检查存档文件是否存在 |
-| save | 方法 | - | void | 友好封装，内部调用 `save_game` |
-| load | 方法 | - | void | 友好封装，内部调用 `load_game` |
+| get_save_data | 方法 | - | Dictionary | 序列化当前玩家状态（**version**、钱、天数、完成 NPC、流水）为字典 |
+| apply_save_data | 方法 | data: Dictionary | bool | 应用存档；**返回 false = 拒绝加载**（版本比程序新）。旧存档没有 `version` 字段按 1 处理 |
+| save_game | 方法 | - | bool | 写入 `save_path`；返回 false = 打不开文件 |
+| load_game | 方法 | - | bool | 读取并解析 `save_path`；**返回 false = 没有存档 / JSON 损坏 / 版本过新**。失败时**不改动当前状态** |
+| has_save | 方法 | - | bool | 检查存档文件（`save_path`）是否存在 |
+| save | 方法 | - | bool | 友好封装，内部调用 `save_game` |
+| load | 方法 | - | bool | 友好封装，内部调用 `load_game`；标题界面据此回落"新游戏" |
 
 ---
 

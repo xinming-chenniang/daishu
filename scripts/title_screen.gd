@@ -24,11 +24,12 @@ func _on_start_pressed() -> void:
 func _on_continue_pressed() -> void:
 	if _audio != null:
 		_audio.play_sfx("ui_click")
-	if PlayerManager.has_save():
-		PlayerManager.load()
+	if PlayerManager.has_save() and PlayerManager.load():
 		get_tree().change_scene_to_file("res://scenes/main.tscn")
 	else:
-		print("无存档，开始新游戏")
+		# 读不出（损坏 / 版本比程序新）时**不要**带着半套状态进主界面：
+		# 明确回落到新游戏，并保留原存档文件（不删，留给人工排查）。
+		print("无有效存档，开始新游戏")
 		_on_start_pressed()
 
 func _on_quit_pressed() -> void:

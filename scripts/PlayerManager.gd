@@ -5,8 +5,15 @@ signal day_changed(new_day: int)
 
 const STALL_FEE_PER_DAY: int = 10 # 每日固定支出（摊位+房租+米钱等）
 const SAVE_PATH := "user://save.dat"
+## 存档格式版本。**改字段语义/结构时必须 +1**，并给 apply_save_data() 补迁移分支。
+## 旧存档没有 version 字段 → 按 1 读，保证老档还能用。
+const SAVE_VERSION: int = 1
 const TOTAL_DAYS: int = 10
 const TARGET_MONEY: int = 500
+
+## 实际读写用的存档路径。默认 `SAVE_PATH`；**回归脚本可指向临时文件**，
+## 避免 `tools/verify_save.gd` 覆盖玩家真实存档。
+var save_path: String = SAVE_PATH
 
 signal day_ledger_changed
 
@@ -114,13 +121,22 @@ func show_failure_scene() -> void:
 
 func get_save_data() -> Dictionary:
 	return {
+		"version": SAVE_VERSION,
 		"money": money,
 		"day": day,
 		"completed_npcs": completed_npcs.duplicate(),
 		"day_ledger": day_ledger.duplicate(true)
 	}
 
-func apply_save_data(data: Dictionary) -> void:
+## 读入存档数据。**返回 false = 拒绝加载**（版本比本程序新，或字段类型明显不对）。
+## 旧存档（没有 version 字段）按 1 处理，保证兼容。
+func apply_save_data(data: Dictionary) -> bool:
+	var version := int(data.get("version", 1))
+	if version > SAVE_VERSION:
+		push_error(
+			"存档版本 %d 高于本程序支持的 %d，拒绝加载（避免把新格式字段当旧格式读）" % [version, SAVE_VERSION]
+		)
+		return false
 	if data.has("money"):
 		money = int(data.get("money", money))
 	if data.has("day"):
@@ -133,38 +149,44 @@ func apply_save_data(data: Dictionary) -> void:
 		if typeof(e) == TYPE_DICTIONARY:
 			day_ledger.append(e)
 	day_ledger_changed.emit()
+	return true
 
-func save_game() -> void:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+func save_game() -> bool:
+	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
-		push_error("保存失败：无法打开存档文件 %s" % SAVE_PATH)
-		return
+		push_error("保存失败：无法打开存档文件 %s" % save_path)
+		return false
 	var data := get_save_data()
 	file.store_string(JSON.stringify(data))
+	return true
 
-func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+## 读存档。返回 false = 没有存档 / 读不出 / 拒绝加载（损坏、版本过新）。
+## 调用方（标题界面）据此决定是否回落到"新游戏"，而不是带着半套状态进主界面。
+func load_game() -> bool:
+	if not FileAccess.file_exists(save_path):
+		return false
+	var file := FileAccess.open(save_path, FileAccess.READ)
 	if file == null:
-		push_error("读取失败：无法打开存档文件 %s" % SAVE_PATH)
-		return
+		push_error("读取失败：无法打开存档文件 %s" % save_path)
+		return false
 	var content := file.get_as_text()
 	var json := JSON.new()
 	var err := json.parse(content)
 	if err != OK:
 		push_error("存档 JSON 解析失败：%s" % json.get_error_message())
-		return
+		return false
 	var data = json.data
-	if typeof(data) == TYPE_DICTIONARY:
-		apply_save_data(data)
+	if typeof(data) != TYPE_DICTIONARY:
+		push_error("存档格式不是字典，拒绝加载")
+		return false
+	return apply_save_data(data)
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path)
 
-func save() -> void:
-	save_game()
+func save() -> bool:
+	return save_game()
 
-func load() -> void:
-	load_game()
+func load() -> bool:
+	return load_game()
 
