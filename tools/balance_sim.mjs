@@ -93,8 +93,54 @@ function simulate(cfg, mode, games) {
   return summarize(results);
 }
 
-const GAMES = 20000;
-const BASE_CFG = { totalDays: 10, npcPerDay: 3, stallFee: 10, target: 500, startMoney: 100 };
+// ---------------------------------------------------------------------------
+// CLI：允许临时改参数做扫描，不必改代码（默认参数 = 当前实现，输出与旧版一致）
+//   node tools/balance_sim.mjs
+//   node tools/balance_sim.mjs --target 525
+//   node tools/balance_sim.mjs --targets 500,525,550,575,600   # 细扫目标值
+//   node tools/balance_sim.mjs --bonus-mul 0.75 --targets 500,525
+//   node tools/balance_sim.mjs --games 50000 --stall 12
+// ---------------------------------------------------------------------------
+function parseArgs(argv) {
+  const out = { targets: null, overrides: {} };
+  for (let i = 0; i < argv.length; i++) {
+    const k = argv[i];
+    const v = argv[i + 1];
+    switch (k) {
+      case '--target': out.overrides.target = Number(v); i++; break;
+      case '--stall': out.overrides.stallFee = Number(v); i++; break;
+      case '--npc': out.overrides.npcPerDay = Number(v); i++; break;
+      case '--start': out.overrides.startMoney = Number(v); i++; break;
+      case '--days': out.overrides.totalDays = Number(v); i++; break;
+      case '--games': out.games = Number(v); i++; break;
+      case '--bonus-mul': out.overrides.bonusMul = Number(v); i++; break;
+      case '--base-add': out.overrides.baseAdd = Number(v); i++; break;
+      case '--targets':
+        out.targets = String(v).split(',').map(Number).filter((n) => Number.isFinite(n));
+        i++;
+        break;
+      default:
+        if (k.startsWith('--')) {
+          console.error(`未知参数：${k}（可用：--target --stall --npc --start --days --games --bonus-mul --base-add --targets）`);
+          process.exit(2);
+        }
+    }
+  }
+  return out;
+}
+
+const CLI = parseArgs(process.argv.slice(2));
+
+const GAMES = CLI.games && Number.isFinite(CLI.games) && CLI.games > 0 ? CLI.games : 20000;
+const BASE_CFG = {
+  totalDays: 10,
+  npcPerDay: 3,
+  stallFee: 10,
+  target: 500,
+  startMoney: 100,
+  ...CLI.overrides,
+};
+
 
 const strategies = [
   ['最优（读懂故事，每槽必中）', { p: 1.0 }],
@@ -142,4 +188,25 @@ for (const [label, tweak] of bonusSweep) {
   const cfg = { ...BASE_CFG, ...tweak };
   const s = simulate(cfg, { p: 1.0 }, GAMES);
   console.log(`${label.padEnd(20)} 成功 ${(s.successRate * 100).toFixed(1)}% | 终局 p50 ${s.p50}`);
+}
+
+// 细扫目标值：给"目标金额怎么定"提供数据（只在 --targets 时输出）
+if (CLI.targets && CLI.targets.length > 0) {
+  const { target: _ignored, ...rest } = BASE_CFG;
+  console.log('\n========== 目标金额细扫（其余参数同当前配置） ==========');
+  console.log('目标'.padEnd(10) + '最优'.padEnd(10) + '90%命中'.padEnd(12) + '75%命中'.padEnd(12) + '60%命中'.padEnd(12) + '随机'.padEnd(10) + '最优终局 p50');
+  for (const t of CLI.targets) {
+    const cfg = { ...rest, target: t };
+    const opt = simulate(cfg, { p: 1.0 }, GAMES);
+    const p90 = simulate(cfg, { p: 0.9 }, GAMES);
+    const p75 = simulate(cfg, { p: 0.75 }, GAMES);
+    const p60 = simulate(cfg, { p: 0.6 }, GAMES);
+    const rnd = simulate(cfg, { random: true }, GAMES);
+    const pct = (x) => `${(x * 100).toFixed(1)}%`;
+    console.log(
+      String(t).padEnd(10) + pct(opt.successRate).padEnd(10) + pct(p90.successRate).padEnd(12) +
+      pct(p75.successRate).padEnd(12) + pct(p60.successRate).padEnd(12) + pct(rnd.successRate).padEnd(10) +
+      String(opt.p50)
+    );
+  }
 }
