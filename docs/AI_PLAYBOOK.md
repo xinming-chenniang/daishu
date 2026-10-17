@@ -6,9 +6,12 @@ whenToUse: 任务涉及 Godot 引擎 / GDScript / 场景 / 节点 / 信号 / 资
 
 # 语料（第一依据 —— 别凭记忆写 API）
 
-- `D:\个人项目\daishu\godot-docs`：gitcode 镜像的 godot-docs 仓库，**4.6 分支**（HEAD `b10b7ed`），
-  纯文本稀疏检出 1568 篇 `.rst`。**版本锚点 4.6**（本机引擎 v4.6.1-stable mono 同代）；
+- `godot-docs\`（**仓库根下**，已 gitignore、不入库）：gitcode 镜像的 godot-docs 仓库，**4.6 分支**（HEAD `b10b7ed`），
+  纯文本稀疏检出 1568 篇 `.rst`。**版本锚点 4.6**（引擎 v4.6.1-stable mono 同代）；
   图片与动图**未检出**，正文里的图片链接指向本机访问不了的 `raw.githubusercontent.com` —— **不要追图片**。
+  ⚠️ **有的机器克隆后没有这份语料**（它被 gitignore，且是部分克隆）。先 `Test-Path godot-docs\classes`：
+  不在了就**明说"本地语料缺失"**，改用 `web_fetch` 查 `docs.godotengine.org`（并说明它可能不是 4.6），
+  **别凭记忆补签名**。
 - **语料的边界（2026-10-11 实测）**：它是 `blob:none` 的**部分克隆** —— **只能查文档，不能切分支/回滚**
   （`git checkout` 会去 gitcode.com 取 blob，本机代理拦 403、报 `could not fetch … from promisor remote`）。
   机制、恢复图片与切分支的做法见 `DETAILS.md`「语料的边界」。
@@ -28,13 +31,13 @@ whenToUse: 任务涉及 Godot 引擎 / GDScript / 场景 / 节点 / 信号 / 资
 用 DSH 的 `grep` / `glob` / `read`；**本机 shell 里没有 `rg`**，别在 pwsh 里拼 ripgrep。
 
 1. **查某个类**：先 `grep` 定位行号，再 `read` 该片段（类文件通常 300–3000 行）：
-   `grep pattern="move_and_slide|position" path=D:\个人项目\daishu\godot-docs\classes\class_characterbody2d.rst`
+   `grep pattern="move_and_slide|position" path=<仓库根>\godot-docs\classes\class_characterbody2d.rst`
 2. **不确定方法/信号/属性属于哪个类**（最有用的起手式）：
-   `grep pattern="^\.\. _class_\w+_method_move_and_slide:" path=D:\个人项目\daishu\godot-docs\classes`
+   `grep pattern="^\.\. _class_\w+_method_move_and_slide:" path=<仓库根>\godot-docs\classes`
    锚点规则是 `class_<类名>_(method|property|signal|constant|enum)_<名字>`，把 `method` 换成
    `signal`/`property` 即可反查信号与属性。
 3. **查主题做法**（拖放 / 存档 / 相机跟随 / 状态机）：
-   `grep pattern="drag and drop" path=D:\个人项目\daishu\godot-docs\tutorials`，命中后读对应 rst。
+   `grep pattern="drag and drop" path=<仓库根>\godot-docs\tutorials`，命中后读对应 rst。
 4. **查废弃与版本迁移**、**类参考结构**（锚点写法 / 章节顺序 / 总览表）：见 `DETAILS.md`。
 
 # 纪律
@@ -47,7 +50,7 @@ whenToUse: 任务涉及 Godot 引擎 / GDScript / 场景 / 节点 / 信号 / 资
   `docs.godotengine.org` 实测 200；只在①本地语料确实没有 ②核对某条 API 在 4.6 之后是否变更时用，
   引用官网要说明它可能不是 4.6。
 
-# 项目文档地图（代书，`D:\个人项目\daishu`）
+# 项目文档地图（代书，**仓库根 = 含 `project.godot` 的那层**）
 
 写代码前先看项目自己的文档 —— 它们比通用教程更贴近本项目约定：
 
@@ -122,6 +125,15 @@ whenToUse: 任务涉及 Godot 引擎 / GDScript / 场景 / 节点 / 信号 / 资
     Vector2i(1152, 648)`** 再 `add_child`；即便如此，`--script` 下容器仍可能不排布 ——
     **决定性判据是"截图逐像素比差异"**（`ImageChops.difference` 的 `getbbox()` 是否为 `None`），
     而不是靠肉眼估 y 坐标。
+
+21. **`--script` 的 `_initialize()` 里，`/root/xxx` 绝对路径全部返回 null**。
+    实测（2026-10-18）：脚本一开头就取单例/实例化场景，`get_node("/root/NPCManager")` 报
+    `Can't use get_node() with absolute paths from outside the active scene tree`（或 `Node not found`），
+    而 `get_root().get_node_or_null("NPCManager")` 又能拿到 —— 因为 **`_initialize()` 跑在 SceneTree
+    激活之前**，此时 `get_root().is_inside_tree()` 还是 `false`。给 `current_scene` 赋值**没用**。
+    判据：**`_initialize()` 开头先 `await process_frame`**，之后 root 才进树，
+    场景脚本内部（如 `letter.gd` 的 `get_node("/root/NPCManager")`）也才成立。
+    症状更隐蔽的一点：不加这一帧时用例会"看起来 PASS"（NPC 没初始化、逻辑分支根本没走到），必须看 stderr。
 
 # 维护与导出
 

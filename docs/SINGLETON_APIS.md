@@ -69,3 +69,20 @@
 
 > 说明：`_check_item` 为内部辅助方法，以 `_` 开头视为私有，未在此表中列出。
 
+---
+
+## AudioManager.gd API
+
+| 名称 | 类型 | 参数 | 返回值 | 简要说明 |
+| --- | --- | --- | --- | --- |
+| SFX_DIR | 常量 | - | String | 音效目录，`res://assets/audio/sfx/` |
+| SFX_NAMES | 常量 | - | Array | 四个音效名：`ui_click` / `paper_drop` / `submit` / `day_end` |
+| BASE_DB | 常量 | - | float | 基准音量（−8 dB）；调用方可传偏移量微调 |
+| play_sfx | 方法 | sfx_name: String, volume_offset_db: float = 0.0 | void | 播放一个音效；名字不存在或素材缺失时**静默跳过**，不报错 |
+| has_sfx | 方法 | sfx_name: String | bool | 该音效是否已成功加载（供探针断言） |
+| loaded_sfx | 方法 | - | Array | 已加载的音效名列表 |
+| missing_sfx | 方法 | - | Array | 加载失败的音效名列表（缺素材时用来报警） |
+
+> 素材由 `tools/gen_sfx.py` 程序化合成（16-bit 单声道 44.1 kHz，固定随机种子可重跑）；
+> 校验脚本 `tools/verify_audio.gd`。
+

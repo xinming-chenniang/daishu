@@ -42,15 +42,28 @@
 
 ## 3. 怎么跑、怎么验
 
-⚠️ **本机 `godot` 不在 PATH**，必须用完整路径（含空格，命令里要加引号）：
+⚠️ **`godot` 不在 PATH，且路径因机器而异**（家机在 `D:\Program Files\Godot_v4.6.1-stable_mono_win64\`，
+别的机器可能装在任意位置或还没装）。**不要把路径抄进文档或脚本** —— 先让脚本解析：
 
 ```powershell
-$godot = 'D:\Program Files\Godot_v4.6.1-stable_mono_win64\Godot_v4.6.1-stable_mono_win64_console.exe'
-$proj  = 'D:\个人项目\daishu'
-
-& $godot --path $proj                                    # 跑游戏
-& $godot --headless --path $proj --import                # 新增/改动资源后必须导入
+pwsh -File tools\where-godot.ps1             # 打印可直接粘贴的 $godot / $proj 两行
+pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 ```
+
+脚本依次查 `-GodotPath` → `$env:GODOT_PATH` → PATH → **工作区 `tools\godot\`** → 仓库 `vendor\godot\`
+→ 常见安装位置，并且**只认 `*_console.exe`**（非 console 版在 stdout 被重定向时输出 0 字节，
+会静默破坏截图/验证/MCP）。找不到时退出码 1，并打印下载地址与解压位置。
+
+`$proj` 永远是**仓库根**（含 `project.godot` 的那层），所以在仓库根直接 `--path .` 等价：
+
+```powershell
+& $godot --path .                                 # 跑游戏
+& $godot --headless --path . --import             # 新增/改动资源后必须导入
+& $godot --headless --path . --script res://tools/verify_drop.gd
+```
+
+> 本机（无 D 盘、PowerShell 是 5.1）实测：引擎解压在 `<工作区>\tools\godot\` 即可被自动发现；
+> 脚本带 UTF-8 **BOM** 才能在 5.1 下正确读中文注释（无 BOM 的 UTF-8 会被按 GBK 解码而报语法错）。
 
 **用编辑器跑**：在 Godot 4.x 里打开 `project.godot`，按 **F5**（Run Project）。
 纯 GDScript 是运行时解释的，**没有构建步骤**；项目**没有 CI、没有测试套件、没有 lint**
@@ -63,6 +76,8 @@ $proj  = 'D:\个人项目\daishu'
 | `--script res://tools/verify_drop.gd` | 五槽落词 + 拖拽预览 + 判定 | `总体: PASS` |
 | `--script res://tools/verify_theme.gd` | 全局 Theme 三查（设置项→资源→控件实际取值）| `结论: PASS` |
 | `--script res://tools/verify_avatar.gd` | 头像关系映射 + 缺字段不崩 | `结论: PASS` |
+| `--script res://tools/verify_flow.gd` | 代写→结算→回主界面的状态机（返回不提交、重复结算、破产/第 10 天早退）| `结论: PASS` |
+| `--script res://tools/verify_audio.gd` | 4 个 UI 音效能加载/播放，缺名字不崩 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>]` | 任意场景截图 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |
@@ -81,6 +96,7 @@ $proj  = 'D:\个人项目\daishu'
 | `NPCManager` | 每日生成委托人：姓名、**关系**、正确答案、词库、反馈文本。**NPC id 为负数** |
 | `JudgeSystem` | 判定与计费，四档（PERFECT/GOOD/NORMAL/WRONG）—— **算钱规则见下方「经济数值」** |
 | `FontFallback` | 启动时给主题字体挂系统字体兜底（`Font.fallbacks` **无法存进 `.tres`**，见 `docs\AI_PLAYBOOK.md`）|
+| `AudioManager` | 全局 UI 音效（4 个程序化合成的 wav，播放器池 ×4）。`assets/audio/sfx/` 由 `tools\gen_sfx.py` 生成、可重跑 |
 
 场景脚本**直接访问单例**（`PlayerManager.add_money(20)`、`get_node("/root/NPCManager")`），
 没有依赖注入或服务定位层。
@@ -102,7 +118,8 @@ title_screen → prologue → main → letter（在 main 之上实例化）→ m
 **NPC 字典**（`NPCManager` 生成）：`npc_id`（负数）、`name`、**`relation`**（父母/子女/夫妻/兄弟/朋友，
 决定称谓池与落款池、也驱动头像取字取色）、`request_text`（口述，正解已嵌进句子）、
 `correct`（`salutation` / `body_slots.slot1/2/3` / `signature`）、`word_pool`（与 correct 平行的候选数组）、
-`base_fee`、`perfect_bonus`、`feedback`、`description`、`avatar`（**当前恒为空，未使用**）。
+`base_fee`、`perfect_bonus`、`feedback`、`description`、`avatar`（**恒为空**；`npc_avatar.gd` 会回落到
+`assets/images/ui/avatars/<关系>.png` 的真肖像，再回落程序化名帖牌）。
 
 **玩家答案**（传给 `JudgeSystem.judge(npc, answers)`）：
 `{salutation, body_slot1, body_slot2, body_slot3, signature}`，全是字符串。
@@ -151,14 +168,15 @@ title_screen → prologue → main → letter（在 main 之上实例化）→ m
 | 图 | 检测器 | 目视复核结论 |
 |---|---|---|
 | `letter.png` | ✅ 未检出 | **干净**。右下角那处"疑似残影"裁出来放大看过：只有像素风阶梯边框，**没有字形**（据此改过一版凭印象写的错误结论）|
-| `main.png` | ✅ 未检出（附一处 bbox）| bbox `[2311,439..2368,493]` 是**集市摊位里的人与货**，非文字 |
+| `main.png` | ✅ 未检出 | 已重出为 **1152×648 平涂图**（2026-10-13），不再有 bbox 命中 |
 | `main_bg.png` | ⚠️ **报命中** | bbox `[1928,479..1983,516]` 同样是**摊位里的人与货** —— **误报**，但**检测器仍会报**，别当成回归 |
 
 **规则**：检测器报命中时**必须裁出来人眼复核**再决定；**不能只依据退出码**。
 三张底图的生成器水印已于 2026-10-12 全部清除（做法见 `docs\ART_PLAN.md` §三）。
 
-**已知未处理问题**：标题页用 `main.png`（**水墨风**），主界面用 `main_bg.png`（**像素插画风**）——
-**两者不是同一画风**，对比图与三种处置方案见 `docs\ART_PLAN.md` §二·五。
+**已解决（2026-10-13）**：标题页曾用 `main.png`（水墨风）、主界面用 `main_bg.png`（像素插画风），两者画风不一套。
+现在两张都是**平涂插画 + 暖色调** —— `main.png` 已重出为 1152×648，实测暖度差 55→3，并排已成套。
+历史处置方案与失败路径见 `docs\ART_PLAN.md` §二·五、`docs\ART_TITLE_SET_ATTEMPT.md`、`docs\ART_TITLE_SET_DONE.md`。
 
 ### 素材校验工具（零依赖，只用 node 内置 zlib，**不需要 npm install**）
 
@@ -176,7 +194,8 @@ node tools/art_check.mjs crop      <img> --box x0,y0,x1,y1 --out f   # 取局部
 
 | 要查什么 | 权威文档 |
 |---|---|
-| **本文件的规则依据、本机踩坑（18 条）** | `docs\AI_PLAYBOOK.md`（+ `-DETAILS.md` 完整版）|
+| **本文件的规则依据、本机踩坑（条数以文件为准）** | `docs\AI_PLAYBOOK.md`（+ `-DETAILS.md` 完整版）|
+| **文档与实现是否一致（一次性审计，2026-10-18）** | `docs\DOC_AUDIT_2026-10-18.md` |
 | **发布前进度 / 剩余项** | `docs\PRE_RELEASE_UI_CHECK.md` ← **唯一权威进度表** |
 | 交接摘要（现状/历程/怎么跑/怎么验）| `docs\项目总览.md` |
 | 美术方向、色板锚点、资产清单、水印与画风实测 | `docs\ART_PLAN.md` |
@@ -203,7 +222,9 @@ assets/
   fonts/          # hanchanlongcang.otf + 授权说明
   images/
     backgrounds/  # main.png（标题）/ main_bg.png（主界面）/ letter.png（信纸）
-    ui/           # button_frame.png（九宫格）/ brush_cursor.png（拖拽预览）
+                  # ending_success.png / ending_gameover.png / prologue_bg.png
+    ui/           # button_frame.png（九宫格）/ brush_cursor.png（拖拽预览）/ avatars/<关系>.png
+  audio/sfx/      # ui_click / paper_drop / submit / day_end（tools\gen_sfx.py 生成）
 data/             # art_prompts_round1/2.json（美术生成提示词）
 docs/             # 设计文档（见第 6 节）
 tools/            # 校验 / 模拟 / 截图 / 环境脚本

@@ -6,6 +6,14 @@
 - `NPCManager`：当天 NPC 生成与查询
 - `JudgeSystem`：代写判定与计费
 
+另有 **两个不承载游戏状态的辅助单例**（同样在 `project.godot` 的 `[autoload]` 里）：
+
+- `FontFallback`：启动时给全局主题字体挂系统字体兜底（`Font.fallbacks` 存不进 `.tres`，只能运行时挂）
+- `AudioManager`：全局 UI 音效（4 个合成 wav + 播放器池；切场景不截断声音）
+
+> 调用方写 `get_node_or_null("/root/AudioManager")` 而不是裸全局名 `AudioManager` ——
+> `--script` 模式不注册 autoload，裸名会让 `tools/verify_*.gd` 报 `Identifier not found`（假阳性）。
+
 围绕这三个单例，前端场景脚本（`title_screen.gd`、`prologue.gd`、`main.gd`、`letter.gd`、`EndGameScreen.gd` 等）组成了一条从“标题 → 主界面 → 代写 → 结算 → 结局”的完整数据流。
 
 ### 模块关系图（Mermaid）
