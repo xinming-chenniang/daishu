@@ -17,6 +17,7 @@ func _initialize() -> void:
 	var out_path := ""
 	var click_name := ""
 	var click_first := ""       ## 可选：点击该节点路径下的**第一个 Button**（用于名字由代码生成的列表项）
+	var fixed_seed := -1        ## 可选：固定随机种子，让"随机 NPC"可复现（A/B 截图对比用）
 	var args := OS.get_cmdline_user_args()
 	for i in range(args.size()):
 		match args[i]:
@@ -32,6 +33,9 @@ func _initialize() -> void:
 			"--click-first":
 				if i + 1 < args.size():
 					click_first = args[i + 1]
+			"--seed":
+				if i + 1 < args.size():
+					fixed_seed = int(args[i + 1])
 
 	if out_path.is_empty():
 		push_error("缺少 --out 参数")
@@ -41,6 +45,12 @@ func _initialize() -> void:
 		push_error("未知场景: " + scene_key)
 		quit(1)
 		return
+
+	# 固定种子必须在**生成 NPC 之前**：letter 场景会调 NPCManager.get_today_npcs()。
+	# 用途：改布局/样式前后各截一张，用逐像素对比证明"没有意外变化"。
+	if fixed_seed >= 0:
+		seed(fixed_seed)
+		print("[capture] 固定随机种子: ", fixed_seed)
 
 	# 显式把窗口设到设计分辨率。
 	# 注意：命令行 `--resolution` 会把**视口**一起改掉，导致截图被缩放
