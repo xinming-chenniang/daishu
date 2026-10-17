@@ -96,7 +96,7 @@ split_offset = 355
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wordpanel")
 
-[node name="WordVBox" type="VBoxContainer" parent="HSplit/WordPanel" unique_id=330910408]
+[node name="WordScroll" type="ScrollContainer" parent="HSplit/WordPanel" unique_id=330910408]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -107,29 +107,34 @@ offset_right = -8.0
 offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="WordVBox" type="VBoxContainer" parent="HSplit/WordPanel/WordScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="SalutationLabel" type="Label" parent="HSplit/WordPanel/WordVBox" unique_id=259297334]
+[node name="SalutationLabel" type="Label" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=259297334]
 layout_mode = 2
 text = "称谓词库"
 
-[node name="SalutationContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordVBox" unique_id=1426329187]
+[node name="SalutationContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=1426329187]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="BodyLabel" type="Label" parent="HSplit/WordPanel/WordVBox" unique_id=1240825842]
+[node name="BodyLabel" type="Label" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=1240825842]
 layout_mode = 2
 text = "正文词库"
 
-[node name="BodyContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordVBox" unique_id=1724123747]
+[node name="BodyContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=1724123747]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SignatureLabel" type="Label" parent="HSplit/WordPanel/WordVBox" unique_id=414911630]
+[node name="SignatureLabel" type="Label" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=414911630]
 layout_mode = 2
 text = "落款词库"
 
-[node name="SignatureContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordVBox" unique_id=1557443042]
+[node name="SignatureContainer" type="VBoxContainer" parent="HSplit/WordPanel/WordScroll/WordVBox" unique_id=1557443042]
 layout_mode = 2
 theme_override_constants/separation = 4
 

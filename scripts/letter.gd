@@ -1,10 +1,12 @@
 extends Control
 
 # 左侧词库
+# 结构：WordPanel → WordScroll(ScrollContainer) → WordVBox → 三个分组容器
+# 2026-10-18：词库扩充后内容变长，WordVBox 外移进滚动容器（见 docs/CONTENT_PROPOSAL.md 布局约束）
 @onready var request_label: Label = $HSplit/LetterPanel/LetterVBox/RequestLabel
-@onready var salutation_container: VBoxContainer = $HSplit/WordPanel/WordVBox/SalutationContainer
-@onready var body_container: VBoxContainer = $HSplit/WordPanel/WordVBox/BodyContainer
-@onready var signature_container: VBoxContainer = $HSplit/WordPanel/WordVBox/SignatureContainer
+@onready var salutation_container: VBoxContainer = $HSplit/WordPanel/WordScroll/WordVBox/SalutationContainer
+@onready var body_container: VBoxContainer = $HSplit/WordPanel/WordScroll/WordVBox/BodyContainer
+@onready var signature_container: VBoxContainer = $HSplit/WordPanel/WordScroll/WordVBox/SignatureContainer
 
 # 右侧信纸槽位（锚定在底纸栏位上）
 @onready var salutation_slot = $PaperArea/SalutationSlot
@@ -156,7 +158,8 @@ func _build_word_pools() -> void:
 		# 深灰在暖褐面板上几乎读不出来，改用与底板同族的暖褐（比 Labels 略浅一点做层级区分）
 		label.add_theme_color_override("font_color", Color(0.42, 0.31, 0.18, 1.0))
 		body_container.add_child(label)
-		var row := HBoxContainer.new()
+		# Flow 而不是 HBox：每槽 10 个词，一行放不下会自动换行（左栏另有 ScrollContainer 兜住纵向溢出）。
+		var row := HFlowContainer.new()
 		body_container.add_child(row)
 		for text in body_slots.get(slot_name, []):
 			_add_word_button(row, str(text), "body", slot_name)

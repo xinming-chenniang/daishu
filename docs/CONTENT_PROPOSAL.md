@@ -1,11 +1,14 @@
-# 内容与平衡提案（2026-10-18，待拍板）
+# 内容与平衡提案（2026-10-18）
 
-> 本文只提方案与实测数据，**未改动 `NPCManager.gd` / 数值 / 场景**。
-> 所有数字都可用文末命令复现；候选字已逐个核对字体覆盖。
+> **✅ 方案 A 已采纳并实施（2026-10-18，用户拍板）**：正文 6→10/槽、称谓 3→5、落款 3→4、模板 16→26；
+> 左栏加 `ScrollContainer` + 正文行改 `FlowContainer`。本文 §一 的数据是**实施前快照**，保留作对照；
+> 实施结果与验收见文末「六、实施结果」。数值（目标金额）**未改**。
+>
+> 本文最初只提方案与实测数据；所有数字都可用文末命令复现；候选字已逐个核对字体覆盖。
 
 ---
 
-## 一、现状：内容量
+## 一、实施前基线（内容量）
 
 | 项 | 当前值 | 出处 |
 |---|---|---|
@@ -174,4 +177,52 @@ python tools/check_content_chars.py
 
 # 接入后的数据不变量 + 字体覆盖（Godot 侧，抽样 1200 个 NPC）
 pwsh -File tools\run-godot.ps1 --headless --script res://tools/verify_content.gd
+
+# 代写界面布局（按钮数 / 可滚动 / 不横向溢出 / 滚到底落款可见）
+pwsh -File tools\run-godot.ps1 --headless --script res://tools/verify_letter_layout.gd
 ```
+
+---
+
+## 六、实施结果（2026-10-18，方案 A）
+
+### 改了什么
+
+| 文件 | 改动 |
+|---|---|
+| `scripts/NPCManager.gd` | 四组常量扩充：称谓 3→5/关系、落款 3→4/关系、正文 6→10/槽、模板 16→26 |
+| `scenes/letter.tscn` | `WordPanel` 下插入 **`WordScroll`（ScrollContainer，横向滚动禁用）**，`WordVBox` 移入其下 |
+| `scripts/letter.gd` | 节点路径随新结构更新；正文每槽的行容器 `HBoxContainer` → **`HFlowContainer`**（10 词自动换行）|
+| `tools/verify_drop.gd` | 同步新节点路径（旧路径会让脚本取不到节点并**挂住不退出**——实测踩到）|
+| `tools/verify_letter_layout.gd` | **新增**：布局验收（数量 / 可滚动 / 不横向溢出 / 滚到底可见）|
+
+### 新规模
+
+| 项 | 值 |
+|---|---|
+| 称谓 / 落款 | 5 条/关系（25）· 4 条/关系（20）|
+| 正文词库 | **10 词/槽** × 3 槽 × 5 信型 = 150 个词位 |
+| 故事模板 | **26 条**（家书 6 / 其余各 5）|
+| 用字 | 192 个不同汉字，**0 缺字**（`verify_content` 实测）|
+
+### 布局实测（`verify_letter_layout` PASS）
+
+```
+词库可视高 542，内容高 721，最大滚动 179
+最右按钮「夫君如晤」右缘 359.0，面板右缘 375.0
+滚到底后：落款末按钮 y 537..570，可视区 y 28..570   → 完整可见
+```
+
+### 验收
+
+- `verify_content`：抽样 1200 个 NPC，正解⊆词库 / 同槽无重复 / 故事含三个正解 / 报酬公式 / 字体覆盖 全过。
+- `verify_letter_layout`：5 称谓 + 3×10 正文 + 4 落款、可滚动、无横向溢出、滚到底可见。
+- `verify_drop`：五槽落词 → `PERFECT` / `fee = 20`（拖拽与判定未被布局改动破坏）。
+
+### 未做 / 保留
+
+- **数值未改**：目标仍 500 文（方案 B 的"目标 525"未采纳，随时可叠加）。
+- 截图：[`screenshots/ingame/letter_ui.png`](screenshots/ingame/letter_ui.png)（顶部）、
+  [`screenshots/ingame/letter_ui_scrolled.png`](screenshots/ingame/letter_ui_scrolled.png)（滚到底）。
+- 词义审核：新词按"明代书信常用语感"拟，未经母语者逐条审；如发现不妥，改 `NPCManager` 常量即可，
+  `verify_content` 会守住"正解⊆词库 / 同槽不重复 / 字体覆盖"三条底线。

@@ -25,7 +25,7 @@ func _initialize() -> void:
 	for i in range(4):
 		await process_frame
 
-	var word_panel: Node = letter.get_node("HSplit/WordPanel/WordVBox")
+	var word_panel: Node = letter.get_node("HSplit/WordPanel/WordScroll/WordVBox")
 	var correct: Dictionary = npc.get("correct", {})
 	var correct_body: Dictionary = correct.get("body_slots", {})
 	print("--- NPC: ", npc.get("name", "?"), "  信型: ", npc.get("letter_type", "?"), " ---")

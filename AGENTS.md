@@ -82,6 +82,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_save.gd` | 存读档往返 / 坏档 / 版本过新 / 旧档兼容 | `结论: PASS` |
 | `--script res://tools/verify_cursor.gd` | 毛笔光标素材（尺寸/透明底/热点）+ 设置调用不报错 | `结论: PASS` |
 | `--script res://tools/verify_content.gd` | NPC 数据不变量（正解⊆词库、同槽无重复、故事含正解、报酬公式）+ 字体覆盖 | `结论: PASS` |
+| `--script res://tools/verify_letter_layout.gd` | 代写界面词库布局（5 称谓 / 3×10 正文 / 4 落款、可滚动、不横向溢出）| `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>] [--seed N]` | 任意场景截图；`--seed` 固定随机 NPC，供改版前后逐像素对比 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |
@@ -163,6 +164,9 @@ title_screen → prologue → main → letter（在 main 之上实例化）→ m
 - **全局 Theme**：`theme\daishu_theme.tres` 由 `project.godot` 的 `gui/theme/custom` 挂载，
   六个场景共用（中文字体 + 按钮九宫格）。**全局字号变了要重截所有含列表的界面**（会撑破容器）
 - 可拖拽词：`word_button.gd`（拖拽数据打包 `{type, word, category, body_slot}`）
+- **词库区结构**：`WordPanel → WordScroll(ScrollContainer) → WordVBox → 三个分组容器`；
+  正文每槽是 `HFlowContainer`（每槽 10 词自动换行）。**改这层结构必须跑 `verify_letter_layout.gd`**，
+  并注意 `verify_drop.gd` 里写死了该路径（旧路径会让脚本取不到节点并挂住不退出）。
 - 放置槽：`letter_slot.gd`（`_can_drop_data` 校验 `category`/`body_slot`，发出 `word_dropped(slot_key, word)`）
 
 ## 5. 美术硬规矩
