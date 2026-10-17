@@ -19,6 +19,8 @@ extends Control
 @onready var back_btn: Button = $ButtonBar/BackBtn
 @onready var result_popup: AcceptDialog = $ResultPopup
 @onready var result_label: RichTextLabel = $ResultPopup/ResultLabel
+# 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
+@onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
 const WORD_BUTTON_SCRIPT := preload("res://scripts/word_button.gd")
 # 信纸毛笔字体：与全局 Theme 同一个字体，但信纸用更大的字号与纯墨色
@@ -32,6 +34,10 @@ var current_npc: Dictionary = {}
 var current_npc_id: int = 0
 var _npc_initialized := false
 var _pending_result: Dictionary = {}
+# 是否已完成结算（钱已记账、委托已计入完成）。
+# 之前 return_to_main() 无条件把委托标记完成，导致"点返回主界面、没提交"也会把这单算掉 ——
+# 玩家白跑一趟且拿不到钱。现在只有确认过结算弹窗才置 true（见 tools/verify_flow.gd）。
+var _settled := false
 # 正文三槽界面提示词，随信型变化（由 NPCManager.get_slot_hints 提供）
 var _slot_hints: Dictionary = {"slot1": "其一", "slot2": "其二", "slot3": "其三"}
 
@@ -55,7 +61,7 @@ func _ready() -> void:
 	for slot in [salutation_slot, body_slot1, body_slot2, body_slot3, signature_slot]:
 		slot.word_dropped.connect(_on_slot_word_dropped)
 
-	# 信纸区域使用毛笔字体（若存在 maobi.ttf）
+	# 信纸区域使用毛笔字体（assets/fonts/hanchanlongcang.otf，见 LETTER_FONT_PATH）
 	_apply_letter_font()
 	# 口述文本用系统小字，便于横向阅读
 	request_label.remove_theme_font_override("font")
@@ -98,6 +104,8 @@ func _to_vertical(s: String) -> String:
 # 初始化界面，由主界面调用
 func init_with_npc(npc_id: int) -> void:
 	_npc_initialized = false
+	_settled = false
+	_pending_result = {}
 	current_npc_id = int(npc_id)
 	var npc_manager = get_node("/root/NPCManager")
 	current_npc = npc_manager.get_npc_by_id(current_npc_id)
@@ -182,6 +190,8 @@ func _on_slot_word_dropped(slot_key: String, word: String) -> void:
 func _on_submit_pressed() -> void:
 	if not _npc_initialized or current_npc.is_empty():
 		return
+	if _audio != null:
+		_audio.play_sfx("submit")
 	var result: Dictionary = JudgeSystem.judge(current_npc, player_answers)
 	_pending_result = result
 	var fee := int(result.get("fee", 0))
@@ -212,24 +222,42 @@ func _build_answer_highlight(correct_answers: Dictionary, item_correct: Dictiona
 	lines.append("\n\n——— [color=#27ae60]正确答案[/color] ———")
 	var sal_extra := " （你填：%s）" % player_answers.get("salutation", "") if not ok.get("salutation", true) else ""
 	lines.append("称谓：[color=#27ae60]%s[/color]%s" % [sal, sal_extra])
-	lines.append("正文：家中[color=#27ae60]%s[/color]%s，在外[color=#27ae60]%s[/color]%s，盼[color=#27ae60]%s[/color]%s。" % [
-		slot1, " （你填：%s）" % player_answers.get("body_slot1", "") if not ok.get("body_slot1", true) else "",
-		slot2, " （你填：%s）" % player_answers.get("body_slot2", "") if not ok.get("body_slot2", true) else "",
-		slot3, " （你填：%s）" % player_answers.get("body_slot3", "") if not ok.get("body_slot3", true) else ""
+	# 正文提示词必须跟信型走（家书=家中/在外/盼，贺寿=福寿/纳福/欢聚……）。
+	# 之前这里硬编码"家中/在外/盼"，贺寿/诉苦/求荐的结算面板会给出语义错误的答案块。
+	var hint1 := str(_slot_hints.get("slot1", "其一"))
+	var hint2 := str(_slot_hints.get("slot2", "其二"))
+	var hint3 := str(_slot_hints.get("slot3", "其三"))
+	lines.append("正文：%s[color=#27ae60]%s[/color]%s，%s[color=#27ae60]%s[/color]%s，%s[color=#27ae60]%s[/color]%s。" % [
+		hint1, slot1, " （你填：%s）" % player_answers.get("body_slot1", "") if not ok.get("body_slot1", true) else "",
+		hint2, slot2, " （你填：%s）" % player_answers.get("body_slot2", "") if not ok.get("body_slot2", true) else "",
+		hint3, slot3, " （你填：%s）" % player_answers.get("body_slot3", "") if not ok.get("body_slot3", true) else ""
 	])
 	var sig_extra := " （你填：%s）" % player_answers.get("signature", "") if not ok.get("signature", true) else ""
 	lines.append("落款：[color=#27ae60]%s[/color]%s" % [sig, sig_extra])
 	return "\n".join(lines)
 
 func _on_result_popup_confirmed() -> void:
+	if _audio != null:
+		_audio.play_sfx("ui_click")
+	# 防重复结算：连点确认、或弹窗被再次触发时，同一单不能再记一次账
+	if _pending_result.is_empty():
+		return
 	var fee := int(_pending_result.get("fee", 0))
+	_pending_result = {}
 	var npc_name := str(current_npc.get("name", "未知NPC"))
 	PlayerManager.record_entry("commission", fee, "%s 委托结算" % npc_name, {"npc_id": current_npc_id, "npc_name": npc_name})
-	PlayerManager.add_money(fee)
+	if PlayerManager.add_money(fee):
+		# 这笔钱把余额扣成负数 → 失败结局已请求切换（帧末生效）。
+		# 此时**不能**再回主界面：Main 马上会被释放，继续操作它会踩空。把自己摘掉即可。
+		queue_free()
+		return
+	_settled = true
 	return_to_main()
 
 # 重新填写按钮
 func _on_reset_pressed() -> void:
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	reset_answers()
 
 func reset_answers() -> void:
@@ -256,9 +284,17 @@ func _on_back_pressed() -> void:
 func return_to_main() -> void:
 	var main = get_tree().root.get_node_or_null("Main")
 	if main:
-		if main.has_method("on_npc_completed"):
+		# ⚠️ 只有**真结算过**才把委托标记完成。
+		# 之前这里无条件调用 on_npc_completed()，导致"点返回主界面、没提交"也把这单算掉：
+		# 委托从列表消失、玩家一分钱拿不到（等价于白跑一趟）。
+		if _settled and main.has_method("on_npc_completed"):
 			main.on_npc_completed(current_npc_id)
 		main.show()
 		if main.has_method("update_ui"):
 			main.update_ui()
 	queue_free()
+
+
+## 供回归脚本断言：这一单是否已结算（tools/verify_flow.gd）
+func is_settled() -> bool:
+	return _settled

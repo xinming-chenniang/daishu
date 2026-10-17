@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://djosxvyv0odo3"]
 
 [ext_resource type="Script" uid="uid://co32gx0hwqxwf" path="res://scripts/letter.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://b43wo1f6igftl" path="res://assets/images/backgrounds/letter.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://ci1i2qoqhl6c6" path="res://assets/images/backgrounds/letter.png" id="2"]
 [ext_resource type="Script" uid="uid://fks6j0henc3b" path="res://scripts/letter_slot.gd" id="3"]
 
 [sub_resource type="StyleBoxEmpty" id="4_transparent"]
@@ -171,9 +171,9 @@ mouse_filter = 2
 [node name="SalutationSlot" type="Panel" parent="PaperArea" unique_id=1281543972]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.69402
+anchor_left = 0.73181
 anchor_top = 0.117
-anchor_right = 0.82908
+anchor_right = 0.79281
 anchor_bottom = 0.882
 grow_horizontal = 2
 grow_vertical = 2
@@ -197,9 +197,9 @@ vertical_alignment = 1
 [node name="BodySlot1" type="Panel" parent="PaperArea" unique_id=2051957997]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.52354
+anchor_left = 0.58275
 anchor_top = 0.117
-anchor_right = 0.69402
+anchor_right = 0.64375
 anchor_bottom = 0.882
 grow_horizontal = 2
 grow_vertical = 2
@@ -224,9 +224,9 @@ vertical_alignment = 1
 [node name="BodySlot2" type="Panel" parent="PaperArea" unique_id=730639774]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.35240
+anchor_left = 0.43620
 anchor_top = 0.117
-anchor_right = 0.52354
+anchor_right = 0.49720
 anchor_bottom = 0.882
 grow_horizontal = 2
 grow_vertical = 2
@@ -251,9 +251,9 @@ vertical_alignment = 1
 [node name="BodySlot3" type="Panel" parent="PaperArea" unique_id=440605257]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.18126
+anchor_left = 0.28806
 anchor_top = 0.117
-anchor_right = 0.35240
+anchor_right = 0.34906
 anchor_bottom = 0.882
 grow_horizontal = 2
 grow_vertical = 2
@@ -278,9 +278,9 @@ vertical_alignment = 1
 [node name="SignatureSlot" type="Panel" parent="PaperArea" unique_id=1836985505]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.06012
+anchor_left = 0.14069
 anchor_top = 0.117
-anchor_right = 0.18126
+anchor_right = 0.20169
 anchor_bottom = 0.882
 grow_horizontal = 2
 grow_vertical = 2

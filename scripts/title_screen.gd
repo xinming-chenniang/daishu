@@ -3,6 +3,8 @@ extends Control
 @onready var start_btn: Button = $VBoxContainer/StartButton
 @onready var continue_btn: Button = $VBoxContainer/ContinueButton
 @onready var quit_btn: Button = $VBoxContainer/QuitButton
+# 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
+@onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
 func _ready() -> void:
 	start_btn.pressed.connect(_on_start_pressed)
@@ -13,11 +15,15 @@ func _ready() -> void:
 	continue_btn.disabled = not PlayerManager.has_save()
 
 func _on_start_pressed() -> void:
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	PlayerManager.reset()
 	PlayerManager.save()
 	get_tree().change_scene_to_file("res://scenes/prologue.tscn")
 
 func _on_continue_pressed() -> void:
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	if PlayerManager.has_save():
 		PlayerManager.load()
 		get_tree().change_scene_to_file("res://scenes/main.tscn")

@@ -8,6 +8,10 @@ var body_slot: String = ""  # "slot1" / "slot2" / "slot3" for body
 func _get_drag_data(_at_position: Vector2):
 	if text == "":
 		return null
+	# 拖起时给一声木头轻叩（拿不到单例就静默跳过 —— --script 模式不注册 autoload）
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx("ui_click")
 	var data := {
 		"type": "word",
 		"word": text,

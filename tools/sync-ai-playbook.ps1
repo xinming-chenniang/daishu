@@ -1,4 +1,4 @@
-#requires -Version 7
+﻿#requires -Version 5.1
 <#
 .SYNOPSIS
     把仓库里的 AI 知识源同步到 DSH 技能目录（godot-docs）。

@@ -11,6 +11,8 @@ const NPCAvatar := preload("res://scripts/npc_avatar.gd")
 @onready var save_quit_btn = $MainPanel/VBoxContainer/ButtonBar/SaveQuitBtn
 @onready var end_day_popup: AcceptDialog = $EndDayPopup
 @onready var end_day_label: Label = $EndDayPopup/EndDayLabel
+# 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
+@onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
 func _ready():
 	# 连接按钮信号
@@ -43,8 +45,8 @@ func _resize_panel_to_content() -> void:
 	var needed: float = vbox.get_combined_minimum_size().y + pad
 	panel.offset_bottom = panel.offset_top + ceilf(needed / 8.0) * 8.0
 
-func add_money(delta: int) -> void:
-	PlayerManager.add_money(delta)
+func add_money(delta: int) -> bool:
+	return PlayerManager.add_money(delta)
 
 func update_ui():
 	money_label.text = "铜钱: " + str(PlayerManager.money) + "文"
@@ -62,6 +64,8 @@ func clear_npc_list():
 		child.queue_free()
 
 func _on_start_day_pressed():
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	print("开始新的一天")
 	# 调用NPCManager获取今日NPC
 	var npc_manager = get_node("/root/NPCManager")  # 如果是自动加载的
@@ -133,6 +137,8 @@ func _find_npc_button(node: Node, npc_id: int) -> Button:
 	return null
 
 func _on_npc_button_pressed(btn):
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	var npc_id = btn.get_meta("npc_id")
 	print("点击了NPC：", btn.text, " ID: ", npc_id)
 	
@@ -148,6 +154,8 @@ func _on_npc_button_pressed(btn):
 	self.hide()
 
 func _on_end_day_pressed():
+	if _audio != null:
+		_audio.play_sfx("ui_click")
 	var summary: Dictionary = PlayerManager.get_day_summary()
 	var income := int(summary.get("income", 0))
 	var expense := int(summary.get("expense", 0))
@@ -163,8 +171,14 @@ func _on_end_day_pressed():
 	end_day_popup.popup_centered()
 
 func _on_end_day_popup_confirmed() -> void:
-	PlayerManager.apply_end_of_day_costs()
-	PlayerManager.next_day()
+	if _audio != null:
+		_audio.play_sfx("day_end")
+	# 两条"已切场景"的早退：交摊位费可能直接破产、第 10 天之后会进结局。
+	# 这两种情况下 Main 都会在帧末被释放，再往下改 UI 就是操作已释放的节点。
+	if PlayerManager.apply_end_of_day_costs():
+		return
+	if PlayerManager.next_day():
+		return
 	PlayerManager.reset_day_ledger()
 	PlayerManager.reset_completed_npcs()
 	clear_npc_list()

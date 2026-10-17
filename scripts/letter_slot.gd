@@ -22,8 +22,11 @@ const FILLED_COLOR := Color(0.06, 0.06, 0.05, 1.0)
 const HOVER_TINT := Color(1.06, 1.05, 0.98)
 
 var _has_word: bool = false
+# 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
+var _audio: Node = null
 
 func _ready() -> void:
+	_audio = get_node_or_null("/root/AudioManager")
 	_base_modulate = modulate
 	if text_label:
 		text_label.text = _to_vertical(placeholder)
@@ -106,6 +109,8 @@ func _drop_data(_at_position: Vector2, data) -> void:
 	# 放下后给予轻微“选中”反馈
 	modulate = Color(0.95, 1.0, 0.95)
 	queue_redraw()
+	if _audio != null:
+		_audio.play_sfx("paper_drop")
 	word_dropped.emit(slot_key, word)
 
 func _on_mouse_entered() -> void:

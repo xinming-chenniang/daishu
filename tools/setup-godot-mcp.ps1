@@ -53,13 +53,20 @@ foreach ($cmd in @('git', 'node', 'npm')) {
 Say ("node {0} / git {1}" -f (node --version), ((git --version) -split ' ')[2])
 
 # --- 2. 定位 Godot _console.exe -------------------------------------------
+# 环境变量优先：多台机器时用它指向各自的引擎，不必在这里维护绝对路径。
+# （机器无关的完整解析见 tools\where-godot.ps1，它还会搜工作区 tools\godot\。）
+if (-not $GodotConsolePath -and $env:GODOT_PATH) {
+    $GodotConsolePath = $env:GODOT_PATH
+    Say ("`n[1/4] 使用 `$env:GODOT_PATH = {0}" -f $GodotConsolePath) DarkGray
+}
 if (-not $GodotConsolePath) {
     Say "`n[1/4] 搜索 Godot *_console.exe ..."
     # 先按目录名过滤再深入：直接对整个盘递归会慢到不可用
     $searchRoots = @(
         (Join-Path $env:USERPROFILE 'Downloads'),
+        (Join-Path $projectRoot 'vendor\godot'),
         'C:\Program Files', 'C:\Program Files (x86)',
-        'D:\', 'D:\Tools', 'C:\Tools'
+        'D:\', 'D:\Program Files', 'D:\Tools', 'C:\Tools'
     ) | Where-Object { Test-Path $_ }
 
     $godotDirs = foreach ($root in $searchRoots) {

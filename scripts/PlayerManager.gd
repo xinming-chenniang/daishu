@@ -28,15 +28,25 @@ func _ready() -> void:
 	# 存档加载由标题界面控制，这里不自动加载
 	pass
 
-func add_money(amount: int) -> void:
+## 加/减钱。**返回 true 表示这次调用把钱变成了负数**（已请求切到失败结局）。
+##
+## 为什么要把这个结果返回给调用方：`change_scene_to_file()` 是**帧末**才真正换场景的，
+## 调用方（letter / main）在同一次调用里还会继续改自己那套 UI。如果不看返回值就继续跑，
+## 就会出现"场景已经要换走了，代码还在操作旧节点"的竞争（实测见 docs/DOC_AUDIT_2026-10-18.md §三）。
+func add_money(amount: int) -> bool:
 	money += amount
 	if money < 0:
 		show_failure_scene()
+		return true
+	return false
 
-func next_day() -> void:
+## 进入下一天。**返回 true 表示已触发结局**（第 10 天之后），调用方不要再操作本场景的 UI。
+func next_day() -> bool:
 	day += 1
 	if day > TOTAL_DAYS:
 		check_endgame()
+		return true
+	return false
 
 func is_npc_completed(npc_id: int) -> bool:
 	return completed_npcs.has(npc_id)
@@ -77,8 +87,9 @@ func get_day_summary() -> Dictionary:
 		"entries": day_ledger.duplicate(true)
 	}
 
-func apply_end_of_day_costs() -> void:
-	add_money(-STALL_FEE_PER_DAY)
+## 收当日固定支出。返回 true = 交完这笔钱就破产了（调用方应立即停止后续结算）。
+func apply_end_of_day_costs() -> bool:
+	return add_money(-STALL_FEE_PER_DAY)
 
 func reset_day_ledger() -> void:
 	day_ledger.clear()
@@ -95,7 +106,6 @@ func check_endgame() -> void:
 		show_success_scene()
 	else:
 		show_failure_scene()
-
 func show_success_scene() -> void:
 	get_tree().change_scene_to_file("res://scenes/success.tscn")
 

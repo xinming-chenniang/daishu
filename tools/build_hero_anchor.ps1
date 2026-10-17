@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Drawing
+﻿Add-Type -AssemblyName System.Drawing
 $d = 'D:\个人项目\daishu'
 $out = 'D:\dsh\tmp\hero\hero_composite.png'
 $W = 1920; $H = 1080
