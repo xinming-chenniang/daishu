@@ -302,3 +302,7 @@ pwsh -File tools\setup-godot-mcp.ps1
 6. **共享目录里不要用 `git add -A`**（会把并行会话的在途改动一起提交）。显式列路径。
 7. **`~\.dsh\AGENTS.md` 的「实测陷阱」封顶 12 条**，新增一条 = 同时退役一条（原子操作）；
    详细规则见 `~\.dsh\RULES-PLAN.md`。**本项目的本机踩坑写在 `docs\AI_PLAYBOOK.md`**，不写进用户级。
+8. **Godot 编辑器保存 `project.godot` 时，会把「等于引擎默认值」的设置剪掉**（实测 2026-10-18：
+   打开一次编辑器后 `window/size/viewport_width=1152` / `viewport_height=648` 两行消失，因为
+   1152×648 正是 4.6 的默认值）。**这两行是刻意显式写的**（槽位对齐依赖它，Godot 改默认值就不能默默跟着变）。
+   判据：`git status` 里出现 `project.godot` 的这类删除时**恢复它**，别当成有意改动提交。

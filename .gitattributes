@@ -4,3 +4,9 @@
 # 写法与 Godot 官方文档一致（tutorials/best_practices/version_control_systems.rst:136）。
 # text=auto 保留二进制自动识别，字体 / PNG 不受影响。
 * text=auto eol=lf
+
+# 例外：Windows 批处理（.cmd/.bat）必须保持 CRLF。
+# cmd.exe 对 LF 行尾的批处理容错很差（goto/label、多行 rem 都可能出错），
+# 而 *.cmd 是给人双击用的，不能等到出问题才发现。
+*.cmd text eol=crlf
+*.bat text eol=crlf
