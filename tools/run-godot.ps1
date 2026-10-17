@@ -29,6 +29,9 @@
 #>
 [CmdletBinding()]
 param(
+    # 启动编辑器 GUI（不是跑游戏）。双击 tools\open-editor.cmd 等价于这个。
+    # 同样会做 APPDATA 重定向 —— 本机直接在真实 AppData 下启动编辑器/游戏会崩。
+    [switch]$Editor,
     # 单字符串通道：参数里含 `--scene` / `--out` 这类**会被 PowerShell 当成自家参数名**的写法时用它。
     # 用单引号包住整行，内部按"引号外的空白"分词（路径含空格就用双引号括起来）。
     #   例：-ArgLine '--path . --script res://tools/capture_scene.gd -- --scene letter --out "C:\shots\a.png"'
@@ -97,6 +100,17 @@ if (-not $EngineArgs -or $EngineArgs.Count -eq 0) {
 
 Write-Host ("[run-godot] engine = {0}" -f $engine) -ForegroundColor DarkGray
 Write-Host ("[run-godot] user:// = {0}" -f (Join-Path $env:APPDATA 'Godot\app_userdata')) -ForegroundColor DarkGray
+
+# --- 4. -Editor：启动 GUI 编辑器（非 console 版，独立进程）-----------------
+if ($Editor) {
+    $editorExe = $engine -replace '_console\.exe$', '.exe'
+    if (-not (Test-Path -LiteralPath $editorExe)) { $editorExe = $engine }
+    $editorArgs = @('--path', $projectRoot, '--editor')
+    if ($EngineArgs) { $editorArgs += $EngineArgs }
+    Write-Host ("[run-godot] 启动编辑器：{0}" -f $editorExe) -ForegroundColor Green
+    Start-Process -FilePath $editorExe -ArgumentList $editorArgs -WorkingDirectory $projectRoot
+    exit 0
+}
 
 Push-Location $projectRoot
 try {

@@ -65,9 +65,24 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 > 本机（无 D 盘、PowerShell 是 5.1）实测：引擎解压在 `<工作区>\tools\godot\` 即可被自动发现；
 > 脚本带 UTF-8 **BOM** 才能在 5.1 下正确读中文注释（无 BOM 的 UTF-8 会被按 GBK 解码而报语法错）。
 
-**用编辑器跑**：在 Godot 4.x 里打开 `project.godot`，按 **F5**（Run Project）。
+**用编辑器跑**：**双击 `tools\open-editor.cmd`**（或 `pwsh -File tools\run-godot.ps1 -Editor`），
+在打开的编辑器里按 **F5**。**不要直接双击引擎 exe** —— 见下面这条本机坑。
+
 纯 GDScript 是运行时解释的，**没有构建步骤**；项目**没有 CI、没有测试套件、没有 lint**
 —— 所以第 3 节那些 `tools\` 下的验证脚本就是本项目的事实标准，别指望别的闸门。
+
+> ⚠️ **本机硬坑（2026-10-18 实测，影响"能不能跑起来"）**：直接启动 Godot（双击 exe、
+> 或用真实 `%APPDATA%` 跑）会在**加载项目之前**崩溃：日志先是
+> `Could not create directory: 'user://logs'`，随后 `CrashHandlerException: signal 11`。
+> **游戏和编辑器都受影响**。把 `APPDATA` / `LOCALAPPDATA` 指到可写目录后一切正常
+> （`run-godot.ps1` 就是干这个的，重定向到 `<工作区>\.godot-userdata`）。
+> 实测对照：真实 AppData → `exit=-1073741819`；重定向后 → `exit=0`，编辑器窗口正常打开。
+> 具体原因未查明（同目录下 `cmd mkdir` 是成功的），**只把现象与解法记在这里**。
+>
+> ```powershell
+> tools\open-editor.cmd                                   # 双击/命令行都行：开编辑器
+> pwsh -File tools\run-godot.ps1 --path .                 # 直接跑游戏（不经过编辑器）
+> ```
 
 **改完必须跑验证脚本**（比肉眼看截图可靠）：
 
