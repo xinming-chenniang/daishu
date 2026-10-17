@@ -33,7 +33,7 @@
 全局 UI 主题（中文字体 + 按钮九宫格）、三张主界底图去水印、结局/序章背景、NPC 关系肖像、
 **4 个 UI 音效 + 2 条循环 BGM**（`AudioManager`，标题页右下角可静音）。
 
-**仍缺**：真毛笔系统光标、标题书法大字、首个 Release。
+**仍缺**：标题书法大字、首个 Release。
 剩下多是"加东西"的工作，逐项清单见 [`docs/PRE_RELEASE_UI_CHECK.md`](docs/PRE_RELEASE_UI_CHECK.md)。
 
 美术与提示词见 [`docs/ART_PLAN.md`](docs/ART_PLAN.md)，开发路线见 [`docs/DEV_PLAN.md`](docs/DEV_PLAN.md)。

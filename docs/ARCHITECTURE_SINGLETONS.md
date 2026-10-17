@@ -6,10 +6,11 @@
 - `NPCManager`：当天 NPC 生成与查询
 - `JudgeSystem`：代写判定与计费
 
-另有 **两个不承载游戏状态的辅助单例**（同样在 `project.godot` 的 `[autoload]` 里）：
+另有 **三个不承载游戏状态的辅助单例**（同样在 `project.godot` 的 `[autoload]` 里）：
 
 - `FontFallback`：启动时给全局主题字体挂系统字体兜底（`Font.fallbacks` 存不进 `.tres`，只能运行时挂）
-- `AudioManager`：全局 UI 音效（4 个合成 wav + 播放器池；切场景不截断声音）
+- `AudioManager`：全局音频（4 个音效 + 2 条 BGM + 静音；切场景不截断、BGM 跨场景延续）
+- `CursorManager`：启动时设一次毛笔系统光标（全局状态，跨场景不重置）
 
 > 调用方写 `get_node_or_null("/root/AudioManager")` 而不是裸全局名 `AudioManager` ——
 > `--script` 模式不注册 autoload，裸名会让 `tools/verify_*.gd` 报 `Identifier not found`（假阳性）。

@@ -97,3 +97,20 @@
 > 程序化合成，固定随机种子可重跑；校验脚本 `tools/verify_audio.gd`。
 > BGM 的循环不靠导入设置，而是 `finished` 信号续播（只对当前轨生效，交叉淡化中的旧轨不会复活）。
 
+---
+
+## CursorManager.gd API
+
+启动时把毛笔系统光标设一次（光标是全局状态，跨场景不重置）。素材由 `tools/gen_cursor.py` 生成。
+
+| 名称 | 类型 | 参数 | 返回值 | 简要说明 |
+| --- | --- | --- | --- | --- |
+| CURSOR_PATH | 常量 | - | String | `res://assets/images/ui/cursor_brush_tip.png`（64×64 RGBA）|
+| HOTSPOT | 常量 | - | Vector2 | 热点＝笔尖位置 `(32, 7)`；改素材尺寸时同步改 |
+| MAX_SIZE | 常量 | - | int | Godot 光标上限 128；超出只告警（会被忽略或缩放）|
+| cursor_texture | 方法 | - | Texture2D | 已加载的贴图（供探针断言）|
+| hotspot | 方法 | - | Vector2 | 热点（供探针断言）|
+
+> ⚠️ 系统光标**不进视口截图**、`--headless` 下也不绘制 —— 回归脚本（`tools/verify_cursor.gd`）
+> 只能证明"素材合规 + 调用不报错"，观感仍需真机人眼确认。
+

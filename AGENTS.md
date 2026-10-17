@@ -80,6 +80,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_audio.gd` | 4 个音效 + 2 条 BGM 加载/播放、静音开关生效并持久化 | `结论: PASS` |
 | `--script res://tools/verify_judge.gd` | 四档判定与优先级（留空/词库外词 → WRONG，不叠加底薪）| `结论: PASS` |
 | `--script res://tools/verify_save.gd` | 存读档往返 / 坏档 / 版本过新 / 旧档兼容 | `结论: PASS` |
+| `--script res://tools/verify_cursor.gd` | 毛笔光标素材（尺寸/透明底/热点）+ 设置调用不报错 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>]` | 任意场景截图 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |
@@ -225,7 +226,8 @@ assets/
   images/
     backgrounds/  # main.png（标题）/ main_bg.png（主界面）/ letter.png（信纸）
                   # ending_success.png / ending_gameover.png / prologue_bg.png
-    ui/           # button_frame.png（九宫格）/ brush_cursor.png（拖拽预览）/ avatars/<关系>.png
+    ui/           # button_frame.png（九宫格）/ brush_cursor.png（拖拽预览）
+                  # cursor_brush_tip.png（系统光标，tools\gen_cursor.py 生成）/ avatars/<关系>.png
   audio/sfx/      # ui_click / paper_drop / submit / day_end（tools\gen_sfx.py 生成）
   audio/bgm/      # bgm_title / bgm_letter（23 s 循环，tools\gen_bgm.py 生成）
 data/             # art_prompts_round1/2.json（美术生成提示词）
