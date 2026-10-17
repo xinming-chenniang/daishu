@@ -233,7 +233,7 @@ node tools/art_check.mjs crop      <img> --box x0,y0,x1,y1 --out f   # 取局部
 | 存档与数据结构 | `docs\DATA_FORMATS.md` |
 | 数值平衡模拟 | `docs\BALANCE_REPORT.md` |
 | **内容扩充 / 难度调整提案（已采纳并实施，2026-10-18）** | `docs\CONTENT_PROPOSAL.md` |
-| **Web 版迁移方案（存档，未执行；等触发条件）** | `docs\WEB_VERSION_PLAN.md` |
+| **Web 版迁移方案（含分发策略与技术路线推导；存档，未执行）** | `docs\WEB_VERSION_PLAN.md` |
 | 项目蓝图总览 | `docs\readme.md` |
 | 仓库页说明 | `README.md` |
 
