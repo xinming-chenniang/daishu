@@ -77,7 +77,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_theme.gd` | 全局 Theme 三查（设置项→资源→控件实际取值）| `结论: PASS` |
 | `--script res://tools/verify_avatar.gd` | 头像关系映射 + 缺字段不崩 | `结论: PASS` |
 | `--script res://tools/verify_flow.gd` | 代写→结算→回主界面的状态机（返回不提交、重复结算、破产/第 10 天早退）| `结论: PASS` |
-| `--script res://tools/verify_audio.gd` | 4 个 UI 音效能加载/播放，缺名字不崩 | `结论: PASS` |
+| `--script res://tools/verify_audio.gd` | 4 个音效 + 2 条 BGM 加载/播放、静音开关生效并持久化 | `结论: PASS` |
 | `--script res://tools/verify_judge.gd` | 四档判定与优先级（留空/词库外词 → WRONG，不叠加底薪）| `结论: PASS` |
 | `--script res://tools/verify_save.gd` | 存读档往返 / 坏档 / 版本过新 / 旧档兼容 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>]` | 任意场景截图 | 出图**必须 1152×648**，否则脚本报错 |
@@ -98,7 +98,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `NPCManager` | 每日生成委托人：姓名、**关系**、正确答案、词库、反馈文本。**NPC id 为负数** |
 | `JudgeSystem` | 判定与计费，四档（PERFECT/GOOD/NORMAL/WRONG）—— **算钱规则见下方「经济数值」** |
 | `FontFallback` | 启动时给主题字体挂系统字体兜底（`Font.fallbacks` **无法存进 `.tres`**，见 `docs\AI_PLAYBOOK.md`）|
-| `AudioManager` | 全局 UI 音效（4 个程序化合成的 wav，播放器池 ×4）。`assets/audio/sfx/` 由 `tools\gen_sfx.py` 生成、可重跑 |
+| `AudioManager` | 全局音频：4 个 UI 音效（播放器池 ×4）+ 2 条循环 BGM（交叉淡化、跨场景延续）+ 静音开关（写 `user://settings.cfg`）。素材由 `tools\gen_sfx.py` / `tools\gen_bgm.py` 合成、可重跑 |
 
 场景脚本**直接访问单例**（`PlayerManager.add_money(20)`、`get_node("/root/NPCManager")`），
 没有依赖注入或服务定位层。
@@ -227,6 +227,7 @@ assets/
                   # ending_success.png / ending_gameover.png / prologue_bg.png
     ui/           # button_frame.png（九宫格）/ brush_cursor.png（拖拽预览）/ avatars/<关系>.png
   audio/sfx/      # ui_click / paper_drop / submit / day_end（tools\gen_sfx.py 生成）
+  audio/bgm/      # bgm_title / bgm_letter（23 s 循环，tools\gen_bgm.py 生成）
 data/             # art_prompts_round1/2.json（美术生成提示词）
 docs/             # 设计文档（见第 6 节）
 tools/            # 校验 / 模拟 / 截图 / 环境脚本

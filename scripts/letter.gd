@@ -51,6 +51,8 @@ var player_answers := {
 }
 
 func _ready() -> void:
+	if _audio != null:
+		_audio.play_music("bgm_letter")   # 代写界面换一条更安静的氛围
 	submit_btn.pressed.connect(_on_submit_pressed)
 	reset_btn.pressed.connect(_on_reset_pressed)
 	back_btn.pressed.connect(_on_back_pressed)
@@ -282,6 +284,8 @@ func _on_back_pressed() -> void:
 	return_to_main()
 
 func return_to_main() -> void:
+	if _audio != null:
+		_audio.play_music("bgm_title")   # 回主界面切回标题那条（同一条则 no-op）
 	var main = get_tree().root.get_node_or_null("Main")
 	if main:
 		# ⚠️ 只有**真结算过**才把委托标记完成。

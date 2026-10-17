@@ -15,6 +15,9 @@ const NPCAvatar := preload("res://scripts/npc_avatar.gd")
 @onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
 func _ready():
+	# BGM 跨场景延续：从标题进来时这条已经在播，play_music 对同一条是 no-op
+	if _audio != null:
+		_audio.play_music("bgm_title")
 	# 连接按钮信号
 	start_day_btn.pressed.connect(_on_start_day_pressed)
 	end_day_btn.pressed.connect(_on_end_day_pressed)

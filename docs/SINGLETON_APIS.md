@@ -75,16 +75,25 @@
 
 ## AudioManager.gd API
 
+音频层分三块：**短音效**（播放器池）、**BGM**（两条播放器交叉淡化）、**静音开关**（Master 总线 + 设置文件）。
+
 | 名称 | 类型 | 参数 | 返回值 | 简要说明 |
 | --- | --- | --- | --- | --- |
-| SFX_DIR | 常量 | - | String | 音效目录，`res://assets/audio/sfx/` |
+| SFX_DIR / BGM_DIR | 常量 | - | String | `res://assets/audio/sfx/` 与 `res://assets/audio/bgm/` |
 | SFX_NAMES | 常量 | - | Array | 四个音效名：`ui_click` / `paper_drop` / `submit` / `day_end` |
-| BASE_DB | 常量 | - | float | 基准音量（−8 dB）；调用方可传偏移量微调 |
-| play_sfx | 方法 | sfx_name: String, volume_offset_db: float = 0.0 | void | 播放一个音效；名字不存在或素材缺失时**静默跳过**，不报错 |
-| has_sfx | 方法 | sfx_name: String | bool | 该音效是否已成功加载（供探针断言） |
-| loaded_sfx | 方法 | - | Array | 已加载的音效名列表 |
-| missing_sfx | 方法 | - | Array | 加载失败的音效名列表（缺素材时用来报警） |
+| BGM_NAMES | 常量 | - | Array | 两条 BGM：`bgm_title`（标题/主界面/序章）、`bgm_letter`（代写）|
+| BASE_DB / MUSIC_DB | 常量 | - | float | 音效基准 −8 dB、BGM −20 dB（BGM 是背景，不抢读字）|
+| SETTINGS_PATH | 常量 | - | String | `user://settings.cfg`（只存静音状态，与存档分开）|
+| play_sfx | 方法 | sfx_name: String, volume_offset_db: float = 0.0 | void | 播放音效；名字不存在或素材缺失时**静默跳过** |
+| has_sfx / loaded_sfx / missing_sfx | 方法 | - | bool / Array / Array | 探针断言用 |
+| play_music | 方法 | track: String, fade_sec: float = 1.2 | void | 播放 BGM 并交叉淡化；**同一条重复调用是 no-op**（跨场景延续不重播）|
+| stop_music | 方法 | fade_sec: float = 1.2 | void | 淡出停止（结局界面用）|
+| current_music | 方法 | - | String | 当前 BGM 名，空串＝没有 |
+| has_bgm / missing_bgm | 方法 | - | bool / Array | 探针断言用 |
+| set_muted | 方法 | muted: bool | void | 静音（Master 总线，同时作用于音效与 BGM）并写入设置文件 |
+| is_muted | 方法 | - | bool | 当前静音状态 |
 
-> 素材由 `tools/gen_sfx.py` 程序化合成（16-bit 单声道 44.1 kHz，固定随机种子可重跑）；
-> 校验脚本 `tools/verify_audio.gd`。
+> 素材由 `tools/gen_sfx.py`（44.1 kHz）与 `tools/gen_bgm.py`（22.05 kHz、23 s 循环、首尾交叉淡化）
+> 程序化合成，固定随机种子可重跑；校验脚本 `tools/verify_audio.gd`。
+> BGM 的循环不靠导入设置，而是 `finished` 信号续播（只对当前轨生效，交叉淡化中的旧轨不会复活）。
 

@@ -3,6 +3,7 @@ extends Control
 @onready var start_btn: Button = $VBoxContainer/StartButton
 @onready var continue_btn: Button = $VBoxContainer/ContinueButton
 @onready var quit_btn: Button = $VBoxContainer/QuitButton
+@onready var mute_check: CheckButton = $MuteCheck
 # 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
 @onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
@@ -13,6 +14,18 @@ func _ready() -> void:
 	
 	# 没有存档时可以考虑禁用“继续游戏”按钮
 	continue_btn.disabled = not PlayerManager.has_save()
+
+	if _audio != null:
+		# 静音开关：摆在标题页右下角，状态写进 user://settings.cfg
+		mute_check.button_pressed = _audio.is_muted()
+		mute_check.toggled.connect(_on_mute_toggled)
+		_audio.play_music("bgm_title")
+	else:
+		mute_check.hide()
+
+func _on_mute_toggled(pressed: bool) -> void:
+	if _audio != null:
+		_audio.set_muted(pressed)
 
 func _on_start_pressed() -> void:
 	if _audio != null:

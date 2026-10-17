@@ -5,8 +5,12 @@ extends Control
 @onready var message_label: Label = $TextBacking/VBoxContainer/MessageLabel
 @onready var restart_button: Button = $TextBacking/VBoxContainer/Buttons/RestartButton
 @onready var quit_button: Button = $TextBacking/VBoxContainer/Buttons/QuitButton
+@onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
 func _ready() -> void:
+	# 结局段落用静默收束：这里不接第三条 BGM，直接淡出更干净
+	if _audio != null:
+		_audio.stop_music()
 	if is_success:
 		message_label.text = "恭喜！你凑齐了进京的路费，得以赶赴科考。金榜题名，从此改变命运……"
 	else:

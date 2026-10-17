@@ -29,10 +29,11 @@
         → 当日结算 → 10 天结局（≥500 文成功 / 否则失败）
 ```
 
-已完成：随机 NPC 生成、五信型词库、四档判定、每日结算与流水、存档读档、双结局、全局 UI 主题（中文字体 + 按钮九宫格）、
-三张主界底图去水印、结局/序章背景、NPC 关系肖像、UI 音效（`AudioManager`）。
+已完成：随机 NPC 生成、五信型词库、四档判定、每日结算与流水、存档读档（带版本号与坏档拒绝）、双结局、
+全局 UI 主题（中文字体 + 按钮九宫格）、三张主界底图去水印、结局/序章背景、NPC 关系肖像、
+**4 个 UI 音效 + 2 条循环 BGM**（`AudioManager`，标题页右下角可静音）。
 
-**仍缺**：BGM 与环境音乐、真毛笔系统光标、标题书法大字、首个 Release。
+**仍缺**：真毛笔系统光标、标题书法大字、首个 Release。
 剩下多是"加东西"的工作，逐项清单见 [`docs/PRE_RELEASE_UI_CHECK.md`](docs/PRE_RELEASE_UI_CHECK.md)。
 
 美术与提示词见 [`docs/ART_PLAN.md`](docs/ART_PLAN.md)，开发路线见 [`docs/DEV_PLAN.md`](docs/DEV_PLAN.md)。
@@ -74,7 +75,7 @@ daishu/
 │   ├─ PlayerManager.gd   金钱、天数、流水、存档、结局判定
 │   ├─ NPCManager.gd      每日 3 位委托人、随机 NPC 构造、词库
 │   ├─ JudgeSystem.gd     代写判定、计费规则、反馈文本
-│   ├─ AudioManager.gd    UI 音效（素材由 tools/gen_sfx.py 合成）
+│   ├─ AudioManager.gd    音效 + BGM + 静音（素材由 tools/gen_sfx.py、gen_bgm.py 合成）
 │   └─ FontFallback.gd    运行时给主题字体挂系统字体兜底
 ├─ data/                  美术生成提示词（art_prompts_round1/2.json）
 ├─ docs/                  30 篇设计与实现文档
