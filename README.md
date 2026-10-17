@@ -79,7 +79,7 @@ daishu/
 │   ├─ CursorManager.gd   毛笔系统光标（素材由 tools/gen_cursor.py 生成）
 │   └─ FontFallback.gd    运行时给主题字体挂系统字体兜底
 ├─ data/                  美术生成提示词（art_prompts_round1/2.json）
-├─ docs/                  31 篇设计与实现文档
+├─ docs/                  32 篇设计与实现文档
 ├─ tools/                 资产校验、数值模拟、环境复现脚本
 └─ assets/                字体与图片（字体为免费商用授权）
 ```

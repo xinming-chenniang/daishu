@@ -232,7 +232,8 @@ node tools/art_check.mjs crop      <img> --box x0,y0,x1,y1 --out f   # 取局部
 | NPC 生成规则 | `docs\NPC_GENERATION.md` |
 | 存档与数据结构 | `docs\DATA_FORMATS.md` |
 | 数值平衡模拟 | `docs\BALANCE_REPORT.md` |
-| **内容扩充 / 难度调整提案（待拍板，2026-10-18）** | `docs\CONTENT_PROPOSAL.md` |
+| **内容扩充 / 难度调整提案（已采纳并实施，2026-10-18）** | `docs\CONTENT_PROPOSAL.md` |
+| **Web 版迁移方案（存档，未执行；等触发条件）** | `docs\WEB_VERSION_PLAN.md` |
 | 项目蓝图总览 | `docs\readme.md` |
 | 仓库页说明 | `README.md` |
 
@@ -306,3 +307,7 @@ pwsh -File tools\setup-godot-mcp.ps1
    打开一次编辑器后 `window/size/viewport_width=1152` / `viewport_height=648` 两行消失，因为
    1152×648 正是 4.6 的默认值）。**这两行是刻意显式写的**（槽位对齐依赖它，Godot 改默认值就不能默默跟着变）。
    判据：`git status` 里出现 `project.godot` 的这类删除时**恢复它**，别当成有意改动提交。
+9. **不要用 PowerShell 的 `.Replace()` 改中文文档**（2026-10-18 实测：替换"31 篇"时实际执行成了
+   `'3'→'1'`，把 README 里"每日 3 位委托人""(day-1)/3""31 篇"三处一起改坏，且命令**没有报错**）。
+   **改文档内容一律用 `edit` 工具**（UTF-8 安全）；PowerShell 只用来跑只读查询和 `git`。
+   判据：改完 `git diff` 必须只剩预期的那几行。
