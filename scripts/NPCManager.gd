@@ -103,8 +103,23 @@ const FEEDBACK_GOOD = ["不错，再仔细些就更好了", "大体妥当", "尚
 const FEEDBACK_NORMAL = ["还行吧", "就这样", "可以了", "凑合"]
 const FEEDBACK_WRONG = ["不对不对", "这写的啥？", "重写！", "格式都不对！"]
 
+## 单调递增的序号，用来保证 npc_id 在**同一进程内绝不重复**。
+## 旧实现是 `-(unix + randi()%10000)`：同一秒内生成的两个 NPC 有 1/10000 概率撞 id，
+## 撞了之后 `get_npc_by_id()` 只会返回第一个，完成标记会张冠李戴。
+## 现在改成 `-(unix*1e6 + 序号)`：同秒内靠序号区分，跨秒靠 unix 区分；序号**不取模**
+## （取模到 1000 时，测试里 1 秒内生成 1200 个 NPC 会绕回撞号 —— 实测踩到过）。
+## 取值范围 ~1.7e15，低于 2^53，JSON 往返不会丢精度。
+var _npc_id_counter: int = 0
+
+
+func _next_npc_id() -> int:
+	_npc_id_counter += 1
+	var stamp := int(Time.get_unix_time_from_system())
+	return -(stamp * 1_000_000 + _npc_id_counter)
+
+
 func generate_random_npc(day: int = 1) -> Dictionary:
-	var npc_id: int = -int(Time.get_unix_time_from_system() + randi() % 10000)
+	var npc_id: int = _next_npc_id()
 
 	var first: String = FIRST_NAMES[randi() % FIRST_NAMES.size()]
 	var last: String = LAST_NAMES[randi() % LAST_NAMES.size()]

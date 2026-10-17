@@ -36,16 +36,23 @@ func _initialize() -> void:
 	var seen_salutation := {}
 	var seen_body := {}          # "type/slot" -> {词: true}
 	var seen_signature := {}
+	var seen_ids := {}           # npc_id 必须唯一（撞了会让 get_npc_by_id / 完成标记张冠李戴）
 	var checked := 0
 
 	for round_i in range(SAMPLE_ROUNDS):
 		var day := 1 + (round_i % 10)
 		for npc in nm.get_today_npcs(day):
 			checked += 1
+			var nid := int(npc.get("npc_id", 0))
+			_check(nid < 0, "npc_id 为负数（实测 %d）" % nid)
+			_check(not seen_ids.has(nid), "npc_id 唯一（冲突值 %d）" % nid)
+			seen_ids[nid] = true
 			_check_npc(npc, day, seen_types, seen_relations, seen_salutation, seen_body, seen_signature)
 
 	print("=== 覆盖统计 ===")
 	print("  抽样 NPC：%d 个" % checked)
+	print("  唯一 npc_id：%d 个" % seen_ids.size())
+	_check(seen_ids.size() == checked, "npc_id 无重复（唯一 %d / 抽样 %d）" % [seen_ids.size(), checked])
 	print("  信型：%s" % str(seen_types.keys()))
 	print("  关系：%s" % str(seen_relations.keys()))
 	_check(seen_types.size() == EXPECTED_TYPES, "5 种信型都出现过（实测 %d）" % seen_types.size())
