@@ -28,6 +28,7 @@ FontFallback="*res://scripts/FontFallback.gd"
 NPCManager="*res://scripts/NPCManager.gd"
 JudgeSystem="*res://scripts/JudgeSystem.gd"
 PlayerManager="*res://scripts/PlayerManager.gd"
+SceneFx="*res://scripts/SceneFx.gd"
 
 [display]
 

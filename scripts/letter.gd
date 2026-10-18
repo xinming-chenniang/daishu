@@ -55,6 +55,10 @@ var player_answers := {
 func _ready() -> void:
 	if _audio != null:
 		_audio.play_music("bgm_letter")   # 代写界面换一条更安静的氛围
+	# 代写界面从主界面之上淡入；截图/验证模式下自动跳过（见 scripts/SceneFx.gd）
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null:
+		fx.fade_in(self, 0.22)
 	submit_btn.pressed.connect(_on_submit_pressed)
 	reset_btn.pressed.connect(_on_reset_pressed)
 	back_btn.pressed.connect(_on_back_pressed)

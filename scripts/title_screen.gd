@@ -55,6 +55,11 @@ func _ready() -> void:
 	else:
 		mute_check.hide()
 
+	# 从黑场淡入标题；截图/验证模式下自动跳过（见 scripts/SceneFx.gd）
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null:
+		fx.fade_in(self, 0.45)
+
 func _on_mute_toggled(pressed: bool) -> void:
 	if _audio != null:
 		_audio.set_muted(pressed)

@@ -49,6 +49,20 @@ func _initialize() -> void:
 		var packed := load(path) as PackedScene
 		_check(packed != null, "场景可加载：%s" % path)
 
+	# --- 2.5 动效开关：headless/--script 下必须关掉，否则截图会截到半透明帧 ---
+	var fx = get_root().get_node_or_null("SceneFx")
+	_check(fx != null, "SceneFx autoload 存在")
+	if fx != null:
+		_check(not fx.animations_enabled(), "headless/--script 下动画开关为关闭")
+		var probe := ColorRect.new()
+		probe.color = Color(1, 0, 0, 1)
+		get_root().add_child(probe)
+		fx.fade_in(probe, 0.01)
+		await process_frame
+		_check(is_equal_approx(probe.modulate.a, 1.0),
+			"动画关闭时 fade_in 直接到终态（实测 alpha=%.2f）" % probe.modulate.a)
+		probe.queue_free()
+
 	# --- 3. 标题页按钮与玩法说明 ---
 	var title = load(TITLE_SCENE).instantiate()
 	get_root().add_child(title)

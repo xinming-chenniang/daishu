@@ -18,6 +18,10 @@ func _ready():
 	# BGM 跨场景延续：从标题进来时这条已经在播，play_music 对同一条是 no-op
 	if _audio != null:
 		_audio.play_music("bgm_title")
+	# 主界面淡入；截图/验证模式下自动跳过（见 scripts/SceneFx.gd）
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null:
+		fx.fade_in(self)
 	# 连接按钮信号
 	start_day_btn.pressed.connect(_on_start_day_pressed)
 	end_day_btn.pressed.connect(_on_end_day_pressed)

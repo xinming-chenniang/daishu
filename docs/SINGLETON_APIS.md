@@ -109,6 +109,18 @@
 | HOTSPOT | 常量 | - | Vector2 | 热点＝笔尖位置 `(32, 7)`；改素材尺寸时同步改 |
 | MAX_SIZE | 常量 | - | int | Godot 光标上限 128；超出只告警（会被忽略或缩放）|
 | cursor_texture | 方法 | - | Texture2D | 已加载的贴图（供探针断言）|
+
+---
+
+## SceneFx.gd API
+
+全局动效开关 + 淡入工具。**所有场景动画都必须先问它**，否则截图/验证工具会抓到半透明帧。
+
+| 名称 | 类型 | 参数 | 返回值 | 简要说明 |
+| --- | --- | --- | --- | --- |
+| FADE_IN_SECONDS | 常量 | - | float | 默认淡入时长 0.35 s |
+| animations_enabled | 方法 | - | bool | `--headless` / `--script` / 命令行含 `--out`/`--shot` 时返回 false |
+| fade_in | 方法 | node: CanvasItem, duration: float = 0.35 | void | 关闭动画时直接把 `modulate.a` 置 1；开启时 0→1 补间 |
 | hotspot | 方法 | - | Vector2 | 热点（供探针断言）|
 
 > ⚠️ 系统光标**不进视口截图**、`--headless` 下也不绘制 —— 回归脚本（`tools/verify_cursor.gd`）

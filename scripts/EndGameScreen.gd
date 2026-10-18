@@ -17,6 +17,10 @@ func _ready() -> void:
 		message_label.text = "路费不足，你错过了今年的科考。壮志难酬，只得回乡另谋生计……"
 	restart_button.pressed.connect(_on_restart_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	# 结局淡入；截图/验证模式下 SceneFx 会自动跳过（见 scripts/SceneFx.gd）
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null:
+		fx.fade_in(self, 0.5)
 
 func _on_restart_pressed() -> void:
 	PlayerManager.reset()

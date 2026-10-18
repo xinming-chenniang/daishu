@@ -121,6 +121,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `FontFallback` | 启动时给主题字体挂系统字体兜底（`Font.fallbacks` **无法存进 `.tres`**，见 `docs\AI_PLAYBOOK.md`）|
 | `AudioManager` | 全局音频：4 个 UI 音效（播放器池 ×4）+ 2 条循环 BGM（交叉淡化、跨场景延续）+ 静音开关（写 `user://settings.cfg`）。素材由 `tools\gen_sfx.py` / `tools\gen_bgm.py` 合成、可重跑 |
 | `CursorManager` | 启动时设一次毛笔系统光标（`cursor_brush_tip.png`，64×64、热点 (32,7)）。素材由 `tools\gen_cursor.py` 生成 |
+| `SceneFx` | 全局动效开关 + 淡入：**`--headless` / `--script` / 截图参数下自动跳过**（否则截图会截到半透明帧）；各场景 `_ready()` 用它淡入 |
 
 场景脚本**直接访问单例**（`PlayerManager.add_money(20)`、`get_node("/root/NPCManager")`），
 没有依赖注入或服务定位层。

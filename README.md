@@ -71,12 +71,13 @@ godot --path . # 或用 Godot 编辑器打开本目录，F5 运行
 daishu/
 ├─ project.godot          Godot 4.6 工程；主场景 scenes/title_screen.tscn
 ├─ scenes/                6 个场景：标题 / 序章 / 主界面 / 信纸 / 成功 / 失败
-├─ scripts/               GDScript；六个全局单例 + 各场景脚本
+├─ scripts/               GDScript；七个全局单例 + 各场景脚本
 │   ├─ PlayerManager.gd   金钱、天数、流水、存档、结局判定
 │   ├─ NPCManager.gd      每日 3 位委托人、随机 NPC 构造、词库
 │   ├─ JudgeSystem.gd     代写判定、计费规则、反馈文本
 │   ├─ AudioManager.gd    音效 + BGM + 静音（素材由 tools/gen_sfx.py、gen_bgm.py 合成）
 │   ├─ CursorManager.gd   毛笔系统光标（素材由 tools/gen_cursor.py 生成）
+│   ├─ SceneFx.gd         动效开关（截图/验证模式下自动关闭）
 │   └─ FontFallback.gd    运行时给主题字体挂系统字体兜底
 ├─ data/                  美术生成提示词（art_prompts_round1/2.json）
 ├─ docs/                  32 篇设计与实现文档

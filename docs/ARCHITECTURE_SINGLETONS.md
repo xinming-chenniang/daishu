@@ -182,6 +182,17 @@ graph TD
 
 ---
 
+### SceneFx.gd —— 动效开关与淡入
+
+- 职责：判断当前是否允许动画（`animations_enabled()`），并提供 `fade_in(node, duration)`。
+- **关闭条件**：`--headless`、`--script`（所有 `verify_*.gd` 与 `capture_scene.gd` 都走这条）、
+  或用户参数里出现 `--out` / `--shot`。
+  **原因**：截图工具只等 3–6 帧，0.35 s 的淡入会截到半透明帧，文档图会发暗、视觉回归会假失败。
+- 使用点：`title_screen` / `prologue` / `main` / `letter` / `EndGameScreen` 的 `_ready()` 各调一次。
+- 已实测（2026-10-18）：`letter` 与 `success` 场景在 `--script` 下截图与改动前**逐像素一致**（bbox = None）。
+
+---
+
 ## 关键数据流向
 
 ### 1. 启动与存档加载
