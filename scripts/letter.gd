@@ -199,6 +199,10 @@ func _on_slot_word_dropped(slot_key: String, word: String) -> void:
 func _on_submit_pressed() -> void:
 	if not _npc_initialized or current_npc.is_empty():
 		return
+	# 弹窗打开时忽略重复提交：否则会重新判定一次、覆盖 _pending_result，
+	# 玩家在"确认"前连点提交就能把上一次结算结果顶掉（Enter 键也会走到这里）。
+	if result_popup != null and result_popup.visible:
+		return
 	if _audio != null:
 		_audio.play_sfx("submit")
 	var result: Dictionary = JudgeSystem.judge(current_npc, player_answers)
@@ -220,8 +224,13 @@ func _on_submit_pressed() -> void:
 ## 结算弹窗淡入。
 ## 注意：AcceptDialog 是独立 Window，改它的 modulate 不会影响内部绘制，
 ## 所以淡入的是内容节点（RichTextLabel）。
+## 截图/验证模式必须让 SceneFx 接管（否则弹窗内容停在半透明，截出来是"空弹窗"）。
 func _popup_fade_in() -> void:
 	if not is_inside_tree() or result_label == null:
+		return
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null and not fx.animations_enabled():
+		result_label.modulate.a = 1.0
 		return
 	result_label.modulate = Color(1, 1, 1, 0)
 	var tw := create_tween()
@@ -239,21 +248,21 @@ func _build_answer_highlight(correct_answers: Dictionary, item_correct: Dictiona
 	var sal := str(c.get("salutation", ""))
 	var sig := str(c.get("signature", ""))
 	var lines: Array[String] = []
-	lines.append("\n\n——— [color=#27ae60]正确答案[/color] ———")
+	lines.append("\n\n——— [color=#1e7a43]正确答案[/color] ———")
 	var sal_extra := " （你填：%s）" % player_answers.get("salutation", "") if not ok.get("salutation", true) else ""
-	lines.append("称谓：[color=#27ae60]%s[/color]%s" % [sal, sal_extra])
+	lines.append("称谓：[color=#1e7a43]%s[/color]%s" % [sal, sal_extra])
 	# 正文提示词必须跟信型走（家书=家中/在外/盼，贺寿=福寿/纳福/欢聚……）。
 	# 之前这里硬编码"家中/在外/盼"，贺寿/诉苦/求荐的结算面板会给出语义错误的答案块。
 	var hint1 := str(_slot_hints.get("slot1", "其一"))
 	var hint2 := str(_slot_hints.get("slot2", "其二"))
 	var hint3 := str(_slot_hints.get("slot3", "其三"))
-	lines.append("正文：%s[color=#27ae60]%s[/color]%s，%s[color=#27ae60]%s[/color]%s，%s[color=#27ae60]%s[/color]%s。" % [
+	lines.append("正文：%s[color=#1e7a43]%s[/color]%s，%s[color=#1e7a43]%s[/color]%s，%s[color=#1e7a43]%s[/color]%s。" % [
 		hint1, slot1, " （你填：%s）" % player_answers.get("body_slot1", "") if not ok.get("body_slot1", true) else "",
 		hint2, slot2, " （你填：%s）" % player_answers.get("body_slot2", "") if not ok.get("body_slot2", true) else "",
 		hint3, slot3, " （你填：%s）" % player_answers.get("body_slot3", "") if not ok.get("body_slot3", true) else ""
 	])
 	var sig_extra := " （你填：%s）" % player_answers.get("signature", "") if not ok.get("signature", true) else ""
-	lines.append("落款：[color=#27ae60]%s[/color]%s" % [sig, sig_extra])
+	lines.append("落款：[color=#1e7a43]%s[/color]%s" % [sig, sig_extra])
 	return "\n".join(lines)
 
 func _on_result_popup_confirmed() -> void:
@@ -276,6 +285,9 @@ func _on_result_popup_confirmed() -> void:
 
 # 重新填写按钮
 func _on_reset_pressed() -> void:
+	# 结算弹窗还在时不要清空信纸：玩家会以为"重置"把刚判完的答案弄没了
+	if result_popup != null and result_popup.visible:
+		return
 	if _audio != null:
 		_audio.play_sfx("ui_click")
 	reset_answers()

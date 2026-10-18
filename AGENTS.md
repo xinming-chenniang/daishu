@@ -89,7 +89,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | 命令 | 验什么 | 期望 |
 |---|---|---|
 | `powershell -File tools\verify-all.ps1` | **一次跑全部 `verify_*.gd`**，每个 120 s 超时（超时判失败，不会假挂）| `11/11 通过`、退出码 0 |
-| `--script res://tools/verify_drop.gd` | 五槽落词 + 拖拽预览 + 判定 | `总体: PASS` |
+| `--script res://tools/verify_drop.gd` | 五槽落词 + 拖拽预览 + 判定 + 键盘/守卫；`--shot-popup x.png` 可截结算弹窗 | `总体: PASS` |
 | `--script res://tools/verify_theme.gd` | 全局 Theme 三查（设置项→资源→控件实际取值）| `结论: PASS` |
 | `--script res://tools/verify_avatar.gd` | 头像关系映射 + 缺字段不崩 | `结论: PASS` |
 | `--script res://tools/verify_flow.gd` | 代写→结算→回主界面的状态机（返回不提交、重复结算、破产/第 10 天早退）| `结论: PASS` |

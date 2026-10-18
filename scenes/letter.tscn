@@ -4,6 +4,22 @@
 [ext_resource type="Texture2D" uid="uid://ci1i2qoqhl6c6" path="res://assets/images/backgrounds/letter.png" id="2"]
 [ext_resource type="Script" uid="uid://fks6j0henc3b" path="res://scripts/letter_slot.gd" id="3"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_popup"]
+content_margin_left = 16.0
+content_margin_top = 14.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.945, 0.901, 0.808, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.643, 0.235, 0.173, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [sub_resource type="StyleBoxEmpty" id="4_transparent"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_antxc"]
@@ -334,8 +350,9 @@ text = "返回主界面"
 
 [node name="ResultPopup" type="AcceptDialog" parent="." unique_id=1110684998]
 title = "结算结果"
-size = Vector2i(380, 220)
-min_size = Vector2i(320, 160)
+size = Vector2i(460, 320)
+min_size = Vector2i(380, 220)
+theme_override_styles/panel = SubResource("StyleBoxFlat_popup")
 
 [node name="ResultLabel" type="RichTextLabel" parent="ResultPopup" unique_id=437336627]
 anchors_preset = 15
@@ -347,5 +364,7 @@ offset_right = -8.0
 offset_bottom = -49.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_colors/default_color = Color(0.14, 0.11, 0.07, 1)
+theme_override_constants/line_separation = 5
 bbcode_enabled = true
 text = "（结算结果）"

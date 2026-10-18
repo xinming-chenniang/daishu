@@ -133,6 +133,40 @@ func _initialize() -> void:
 	if not kb_ok:
 		all_ok = false
 
+	# 可选：截一张"弹窗内容已显示"的图（--shot-popup <path>，需要非 headless）。
+	# 用途：结算弹窗曾经是深色默认底 + 墨色字、又在截图模式停在淡入半透明，肉眼完全读不到。
+	var popup_args := OS.get_cmdline_user_args()
+	for i in range(popup_args.size()):
+		if popup_args[i] == "--shot-popup" and i + 1 < popup_args.size():
+			for j in range(3):
+				await process_frame
+			var img: Image = get_root().get_texture().get_image()
+			if img != null:
+				img.save_png(popup_args[i + 1])
+				print("[shot] 已保存 ", popup_args[i + 1])
+			else:
+				print("[shot] 取不到视口图像（headless 下正常）")
+
+	# 弹窗打开时：重复提交 / 「重新填写」都必须被忽略。
+	# 判据不能只看弹窗还开着（重判同答案也会开着），所以先把答案换空：
+	# 没有守卫时会判成 WRONG、fee 变负，一眼就能看出。
+	var fee_before := int(letter._pending_result.get("fee", 0))
+	var answers_before: Dictionary = letter.player_answers.duplicate(true)
+	letter.player_answers = {}
+	letter._on_submit_pressed()
+	await process_frame
+	var submit_guard := int(letter._pending_result.get("fee", 0)) == fee_before
+	print("  [%s] 弹窗打开时重复提交被忽略（fee 仍为 %d）" % ["OK" if submit_guard else "FAIL", fee_before])
+	if not submit_guard:
+		all_ok = false
+	letter.player_answers = answers_before
+	letter._on_reset_pressed()
+	await process_frame
+	var reset_guard: bool = not letter.player_answers.is_empty()
+	print("  [%s] 弹窗打开时「重新填写」被忽略（答案仍在）" % ("OK" if reset_guard else "FAIL"))
+	if not reset_guard:
+		all_ok = false
+
 	var esc := InputEventKey.new()
 	esc.keycode = KEY_ESCAPE
 	esc.pressed = true

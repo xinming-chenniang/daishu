@@ -379,6 +379,11 @@ godot --path . --script res://tools/verify_drop.gd -- --shot out.png   # 顺便�
     `tools\verify_shell.gd` 守「可开可关 + 含怎么玩/判定/目标」
 11. ~~应用身份~~ ✅ 已完成（2026-10-18）：`config/name="代书"`、`config/version="0.9.0"`、
     `config/icon` → `assets/images/ui/icon.png`（`tools\gen_icon.py` 生成，256×256）
+12. ~~结算/日终弹窗可读性~~ ✅ 已完成（2026-10-18）：两处弹窗原来用 `AcceptDialog` 默认深色半透明底 +
+    墨色字，**实际几乎看不见**（截图证实）；改为暖纸底 + 朱砂边，`RichTextLabel` 补 `default_color`
+    与 `line_separation`，弹窗放大到 460×320；弹窗淡入也交给 `SceneFx`（截图模式直接到终态）。
+    证据：[`letter_result_popup.png`](screenshots/ingame/letter_result_popup.png)、
+    [`main_endday_popup.png`](screenshots/ingame/main_endday_popup.png)
 
 **清单内项目全部完成（2026-10-18）。** 发布侧剩下的是**外部条件**而非界面工作：
 导出模板（本机为空）、GitHub topics/Release（需凭据）、真人内测。详见 `项目总览.md` §八 / §十一。

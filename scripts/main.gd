@@ -171,15 +171,20 @@ func _on_end_day_pressed():
 	var lines := "第 %d 日结算\n\n" % PlayerManager.day
 	lines += "今日收入：%d 文\n" % income
 	lines += "今日扣除：%d 文\n" % expense
-	lines += "固定支出（摊位+房租+米钱）：%d 文\n\n" % stall_fee
+	lines += "固定支出（摊位费）：%d 文\n\n" % stall_fee
 	lines += "净收益：%d 文\n" % net
 	lines += "确认后进入下一天。"
 	end_day_label.text = lines
 	end_day_popup.popup_centered()
-	# 与结算弹窗一致：Window 本身的 modulate 不生效，淡入的是内容 Label
-	end_day_label.modulate = Color(1, 1, 1, 0)
-	var tw := create_tween()
-	tw.tween_property(end_day_label, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+	# 与结算弹窗一致：Window 本身的 modulate 不生效，淡入的是内容 Label；
+	# 截图/验证模式下交给 SceneFx 直接置终态（否则截到半透明内容 = 空弹窗）
+	var fx := get_node_or_null("/root/SceneFx")
+	if fx != null and not fx.animations_enabled():
+		end_day_label.modulate.a = 1.0
+	else:
+		end_day_label.modulate = Color(1, 1, 1, 0)
+		var tw := create_tween()
+		tw.tween_property(end_day_label, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 
 func _on_end_day_popup_confirmed() -> void:
 	if _audio != null:

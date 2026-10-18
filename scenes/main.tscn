@@ -1,7 +1,23 @@
-[gd_scene load_steps=4 format=3 uid="uid://bt30r1vr30vle"]
+[gd_scene load_steps=5 format=3 uid="uid://bt30r1vr30vle"]
 
 [ext_resource type="Script" uid="uid://6rfynpaylohb" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Texture2D" uid="uid://sgr8qqxqwh3i" path="res://assets/images/backgrounds/main_bg.png" id="2_0wfyh"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_popup"]
+content_margin_left = 16.0
+content_margin_top = 14.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.945, 0.901, 0.808, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.643, 0.235, 0.173, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="1_main_panel"]
 content_margin_left = 12.0
@@ -115,6 +131,7 @@ text = "保存并退出"
 title = "结束今日"
 size = Vector2i(340, 180)
 min_size = Vector2i(280, 120)
+theme_override_styles/panel = SubResource("StyleBoxFlat_popup")
 
 [node name="EndDayLabel" type="Label" parent="EndDayPopup"]
 anchors_preset = 15
