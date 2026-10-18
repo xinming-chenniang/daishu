@@ -120,6 +120,39 @@ func _initialize() -> void:
 		print("  result_code = ", result.get("result_code", "?"))
 		print("  fee         = ", result.get("fee", "?"))
 
+	# --- 键盘：Enter 提交 / Esc 返回（弹窗打开时不拦截）---
+	print("--- 键盘操作 ---")
+	var popup: AcceptDialog = letter.get_node("ResultPopup")
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	letter._unhandled_input(enter)
+	await process_frame
+	var kb_ok := popup.visible
+	print("  [%s] Enter → 结算弹窗打开" % ("OK" if kb_ok else "FAIL"))
+	if not kb_ok:
+		all_ok = false
+
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	letter._unhandled_input(esc)
+	await process_frame
+	var esc_guard := popup.visible and is_instance_valid(letter)
+	print("  [%s] 弹窗打开时 Esc 不被界面拦截" % ("OK" if esc_guard else "FAIL"))
+	if not esc_guard:
+		all_ok = false
+
+	popup.hide()
+	await process_frame
+	letter._unhandled_input(esc)
+	# 注意：return_to_main() 里已经 queue_free()，**不能在 await 之后再访问 letter**
+	# （实测过：访问已释放实例会抛错，脚本停在半路不 quit，命令行看起来像"挂住"）
+	var back_ok := is_instance_valid(letter) and letter.is_queued_for_deletion()
+	print("  [%s] 弹窗关闭后 Esc → 返回并释放代写界面" % ("OK" if back_ok else "FAIL"))
+	if not back_ok:
+		all_ok = false
+
 	print("=== 总体: ", "PASS" if all_ok else "FAIL", " ===")
 
 	# 可选：截一张"已填好词"的图（传 --shot <路径> 时）

@@ -135,6 +135,15 @@ whenToUse: 任务涉及 Godot 引擎 / GDScript / 场景 / 节点 / 信号 / 资
     场景脚本内部（如 `letter.gd` 的 `get_node("/root/NPCManager")`）也才成立。
     症状更隐蔽的一点：不加这一帧时用例会"看起来 PASS"（NPC 没初始化、逻辑分支根本没走到），必须看 stderr。
 
+22. **验证脚本里 `queue_free()` 之后不能再跨 `await` 访问该节点**（2026-10-18 实测）。
+    写法 `letter._unhandled_input(esc)` → 内部 `return_to_main()` → `queue_free()`，
+    然后 `await process_frame` 再调 `letter.is_queued_for_deletion()`，报
+    `Cannot call method 'is_queued_for_deletion' on a previously freed instance`。
+    **致命之处不是报错本身，而是 GDScript 报错后停在本帧、不执行后面那句 `quit()`** ——
+    命令行看起来像"挂住"（本次跑了 4 分钟才发现，和旧节点路径那次症状一模一样）。
+    判据：**在调用后同步断言**（`is_instance_valid(n) and n.is_queued_for_deletion()`），
+    不要跨帧再碰它；跑验证脚本一律带超时，超过 30 s 视为失败去查 stderr。
+
 # 维护与导出
 
 - **装导出模板**（没有它无法产出 exe）、**升级引擎切语料分支**、**恢复图片**、**网络可达性**：

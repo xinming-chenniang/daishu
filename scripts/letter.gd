@@ -320,3 +320,22 @@ func return_to_main() -> void:
 ## 供回归脚本断言：这一单是否已结算（tools/verify_flow.gd）
 func is_settled() -> bool:
 	return _settled
+
+
+## 键盘操作：Enter 提交、Esc 返回主界面（不消耗委托）。
+## 弹窗打开时不拦截——AcceptDialog 自己处理 Enter/Esc，重复处理会连点两次。
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventKey):
+		return
+	var key := event as InputEventKey
+	if not key.pressed or key.echo:
+		return
+	if result_popup != null and result_popup.visible:
+		return
+	match key.keycode:
+		KEY_ENTER, KEY_KP_ENTER:
+			_on_submit_pressed()
+			get_viewport().set_input_as_handled()
+		KEY_ESCAPE:
+			_on_back_pressed()
+			get_viewport().set_input_as_handled()
