@@ -172,6 +172,10 @@ func _on_end_day_pressed():
 	lines += "确认后进入下一天。"
 	end_day_label.text = lines
 	end_day_popup.popup_centered()
+	# 与结算弹窗一致：Window 本身的 modulate 不生效，淡入的是内容 Label
+	end_day_label.modulate = Color(1, 1, 1, 0)
+	var tw := create_tween()
+	tw.tween_property(end_day_label, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 
 func _on_end_day_popup_confirmed() -> void:
 	if _audio != null:

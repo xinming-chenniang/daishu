@@ -22,8 +22,13 @@ const FILLED_COLOR := Color(0.06, 0.06, 0.05, 1.0)
 const HOVER_TINT := Color(1.06, 1.05, 0.98)
 
 var _has_word: bool = false
+var _drag_hover: bool = false   # 拖着词停在本槽位上方（能放）时高亮
 # 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
 var _audio: Node = null
+
+## 拖拽悬停高亮用的边框色/线宽（比默认虚线更显眼，朱砂色）
+const HOVER_BORDER_COLOR := Color(0.78, 0.33, 0.18, 0.95)
+const HOVER_BORDER_WIDTH := 2.5
 
 func _ready() -> void:
 	_audio = get_node_or_null("/root/AudioManager")
@@ -38,11 +43,15 @@ func _ready() -> void:
 
 func clear_slot() -> void:
 	_has_word = false
+	_drag_hover = false
 	if text_label:
 		text_label.text = _to_vertical(placeholder)
 		text_label.add_theme_color_override("font_color", PLACEHOLDER_COLOR)
 	modulate = _base_modulate
 	queue_redraw()
+
+func is_drag_hover() -> bool:
+	return _drag_hover
 
 # 竖排：每字一行，自上而下
 func _to_vertical(s: String) -> String:
@@ -77,15 +86,23 @@ func _draw_dashed_line(from: Vector2, to: Vector2) -> void:
 	if length <= 0.0:
 		return
 	var normal: Vector2 = dir / length
+	var color := HOVER_BORDER_COLOR if _drag_hover else _border_color
+	var width := HOVER_BORDER_WIDTH if _drag_hover else _border_width
 	var pos: float = 0.0
 	while pos < length:
 		var start_point: Vector2 = from + normal * pos
 		var end_pos: float = min(pos + _dash_length, length)
 		var end_point: Vector2 = from + normal * end_pos
-		draw_line(start_point, end_point, _border_color, _border_width)
+		draw_line(start_point, end_point, color, width)
 		pos += _dash_length + _gap_length
 
 func _can_drop_data(_at_position: Vector2, data) -> bool:
+	var ok := _accepts(data)
+	_set_drag_hover(ok)
+	return ok
+
+## 纯判定：不改变悬停状态（供 _can_drop_data / _drop_data 共用）
+func _accepts(data) -> bool:
 	if typeof(data) != TYPE_DICTIONARY:
 		return false
 	if data.get("type", "") != "word":
@@ -98,16 +115,27 @@ func _can_drop_data(_at_position: Vector2, data) -> bool:
 		return str(data.get("body_slot", "")) == body_slot
 	return true
 
+func _set_drag_hover(v: bool) -> void:
+	if _drag_hover == v:
+		return
+	_drag_hover = v
+	queue_redraw()
+
 func _drop_data(_at_position: Vector2, data) -> void:
-	if not _can_drop_data(_at_position, data):
+	if not _accepts(data):
 		return
 	var word := str(data.get("word", ""))
 	_has_word = true
+	_drag_hover = false
 	if text_label:
 		text_label.text = _to_vertical(word)
 		text_label.add_theme_color_override("font_color", FILLED_COLOR)
-	# 放下后给予轻微“选中”反馈
-	modulate = Color(0.95, 1.0, 0.95)
+	# 放下后给一次"落纸"反馈：先轻微染色再淡回原色。
+	# （旧实现把 modulate 直接设成淡绿且**不还原**，已放的槽位会一直偏色）
+	if is_inside_tree():
+		modulate = Color(0.90, 1.0, 0.90)
+		var tw := create_tween()
+		tw.tween_property(self, "modulate", _base_modulate, 0.28).set_trans(Tween.TRANS_SINE)
 	queue_redraw()
 	if _audio != null:
 		_audio.play_sfx("paper_drop")
@@ -115,9 +143,10 @@ func _drop_data(_at_position: Vector2, data) -> void:
 
 func _on_mouse_entered() -> void:
 	# 鼠标悬停时略微提亮，模拟纸张被触碰
-	if modulate == _base_modulate:
+	if not _drag_hover and modulate == _base_modulate:
 		modulate = HOVER_TINT
 
 func _on_mouse_exited() -> void:
+	_set_drag_hover(false)
 	if modulate != _base_modulate:
 		modulate = _base_modulate

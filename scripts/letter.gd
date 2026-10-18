@@ -211,6 +211,17 @@ func _on_submit_pressed() -> void:
 	var answer_block := _build_answer_highlight(correct_answers, item_correct)
 	result_label.text = line1 + "\n\n" + feedback_text + answer_block
 	result_popup.popup_centered()
+	_popup_fade_in()
+
+## 结算弹窗淡入。
+## 注意：AcceptDialog 是独立 Window，改它的 modulate 不会影响内部绘制，
+## 所以淡入的是内容节点（RichTextLabel）。
+func _popup_fade_in() -> void:
+	if not is_inside_tree() or result_label == null:
+		return
+	result_label.modulate = Color(1, 1, 1, 0)
+	var tw := create_tween()
+	tw.tween_property(result_label, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 
 # 生成带高亮的“正确答案”区块（BBCode：绿色=正确，错项旁显示玩家所填）
 func _build_answer_highlight(correct_answers: Dictionary, item_correct: Dictionary) -> String:

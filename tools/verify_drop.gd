@@ -63,8 +63,26 @@ func _initialize() -> void:
 			print("  [FAIL] 槽位拒绝该词: ", want, " -> ", c["slot"])
 			all_ok = false
 			continue
+		# 拖拽悬停高亮：合法词悬停时该亮，非法词不该亮
+		if not slot.is_drag_hover():
+			print("  [FAIL] 合法词悬停未高亮: ", want, " -> ", c["slot"])
+			all_ok = false
+		var wrong := {
+			"type": "word",
+			"word": "错类词",
+			"category": "signature" if str(c["cat"]) != "signature" else "salutation",
+			"body_slot": c["bs"],
+		}
+		if slot._can_drop_data(Vector2.ZERO, wrong) or slot.is_drag_hover():
+			print("  [FAIL] 非法词也亮了/被接受: ", c["slot"], " <- ", wrong["category"])
+			all_ok = false
+		# 重新置为合法悬停，再真正投放
+		slot._can_drop_data(Vector2.ZERO, data)
 		slot._drop_data(Vector2.ZERO, data)
 		await process_frame
+		if slot.is_drag_hover():
+			print("  [FAIL] 投放后悬停高亮未复位: ", c["slot"])
+			all_ok = false
 
 		var label: Label = slot.get_node("TextLabel")
 		var shown: String = label.text.replace("\n", "")
