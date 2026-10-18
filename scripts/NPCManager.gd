@@ -3,118 +3,102 @@ extends Node
 # 当日生成的 NPC 列表，供 get_npc_by_id 查找
 var current_day_npcs: Array = []
 
-# ---------- 基础常量 ----------
-const FIRST_NAMES = ["张", "王", "李", "刘", "陈", "赵", "周"]
-const LAST_NAMES = ["大牛", "二狗", "翠花", "铁柱", "秀英", "有才", "三娘"]
-const RELATIONS = ["父母", "子女", "夫妻", "兄弟", "朋友"]
+## 内容真源：data/npc_content.json（2026-10-18 由硬编码常量迁出，见 docs/NPC_GENERATION.md）。
+## 改文案/词库只改 JSON；改完必须跑 tools/verify_content.gd 与 tools/check_content_chars.py。
+const CONTENT_PATH := "res://data/npc_content.json"
 
-# ---------- 信型 ----------
-const LETTER_TYPES := ["家书", "请安", "贺寿", "诉苦", "求荐"]
-
-# 称谓/落款按关系划分（与信型正交：称谓由辈分决定，信型体现在正文与故事）
-# 2026-10-18 内容扩充（方案 A）：称谓 3 → 5 条/关系，落款 3 → 4 条/关系。
-# 新词全部经 tools/check_content_chars.py 核对过 hanchanlongcang 字形表。
-const SALUTATION_POOL = {
-	"父母": ["父母大人膝下", "爹娘亲启", "双亲大人安", "慈亲膝下", "双亲尊前"],
-	"子女": ["吾儿如晤", "吾女见字", "孩儿见字", "吾儿收览", "吾女如见"],
-	"夫妻": ["夫君如晤", "贤妻妆次", "良人如晤", "良人安好", "卿卿如晤"],
-	"兄弟": ["吾兄亲启", "贤弟如晤", "兄长如晤", "手足如晤", "贤弟亲启"],
-	"朋友": ["仁兄足下", "好友如面", "某兄台鉴", "仁兄赐鉴", "故友如面"]
-}
-
-const SIGNATURE_POOL = {
-	"父母": ["男叩上", "儿拜上", "儿敬禀", "男谨禀"],
-	"子女": ["父字", "母字", "父手书", "父白"],
-	"夫妻": ["妾拜上", "夫字", "良人字", "夫拜"],
-	"兄弟": ["弟谨启", "兄字", "弟拜上", "弟拜手"],
-	"朋友": ["友拜上", "弟谨启", "友顿首", "友谨具"]
-}
-
-# 正文词库按信型划分（每槽 10 词；2026-10-18 由 6 扩充，见 docs/CONTENT_PROPOSAL.md 方案 A）
-const BODY_POOLS = {
-	"家书": {
-		"slot1": ["安好", "安康", "平安", "无事", "顺遂", "如意", "康泰", "平顺", "安泰", "清吉"],
-		"slot2": ["勿念", "保重", "加衣", "早归", "节劳", "珍重", "自珍", "宽心", "勿虑", "加餐"],
-		"slot3": ["回信", "团聚", "归家", "平安", "相会", "团圆", "归宁", "回音", "聚首", "来音"]
-	},
-	"请安": {
-		"slot1": ["康健", "安泰", "平安", "顺遂", "无恙", "安康", "康泰", "安顺", "平康", "清吉"],
-		"slot2": ["自珍", "节劳", "添衣", "保重", "宽心", "勿虑", "加餐", "早眠", "少劳", "安眠"],
-		"slot3": ["回音", "相见", "平安", "珍重", "叙话", "团圆", "来音", "叙旧", "回信", "聚首"]
-	},
-	"贺寿": {
-		"slot1": ["康健", "福寿", "安康", "矍铄", "延年", "益寿", "康宁", "寿康", "安健", "长健"],
-		"slot2": ["添寿", "纳福", "吉祥", "如意", "安康", "顺遂", "增福", "纳吉", "添喜", "迎祥"],
-		"slot3": ["团圆", "寿宴", "欢聚", "畅饮", "相见", "福泽", "祝寿", "献瑞", "同庆", "畅叙"]
-	},
-	"诉苦": {
-		"slot1": ["艰难", "困顿", "拮据", "窘迫", "潦倒", "维艰", "穷困", "窘乏", "缺衣", "少食"],
-		"slot2": ["帮衬", "周济", "援手", "照拂", "垂怜", "接济", "救济", "帮扶", "借贷", "施援"],
-		"slot3": ["相助", "接济", "回信", "脱困", "救急", "扶持", "解困", "扶危", "济急", "脱难"]
-	},
-	"求荐": {
-		"slot1": ["才学", "功名", "志向", "文章", "抱负", "勤学", "志学", "苦读", "才识", "文名"],
-		"slot2": ["举荐", "引荐", "提携", "栽培", "保举", "引路", "保荐", "举扬", "推举", "推荐"],
-		"slot3": ["相助", "引路", "成全", "提点", "荐引", "疏通", "玉成", "扶持", "推荐", "举荐"]
-	}
-}
-
-# 故事模板按信型划分（{name}/{relation}/{slot1}/{slot2}/{slot3} 会被填充）
-# 2026-10-18 内容扩充（方案 A）：16 → 26 条（每信型 +2）。
-const STORY_TEMPLATES = {
-	"家书": [
-		"我是{name}，想给{relation}写封信。家中{slot1}，在外{slot2}，盼{slot3}。",
-		"给我{relation}带个话：家里{slot1}，你在外要{slot2}，记得{slot3}。",
-		"写封信给{relation}：{slot1}，{slot2}，{slot3}。",
-		"久未给{relation}去信，家中{slot1}，只愿{slot2}，还望{slot3}。",
-		"给{relation}去信：家中{slot1}，你在外{slot2}，盼{slot3}。",
-		"托人捎句话给{relation}：{slot1}，{slot2}，记得{slot3}。"
-	],
-	"请安": [
-		"给{relation}请安：近来{slot1}否？望{relation}{slot2}，只盼{slot3}。",
-		"{name}给{relation}问安：家中{slot1}，望{relation}{slot2}，得闲{slot3}。",
-		"许久未见{relation}，特修书请安：{slot1}，{slot2}，{slot3}。",
-		"久未问候{relation}，特修书请安：{slot1}，望{slot2}，得闲{slot3}。",
-		"{name}给{relation}问安：近来{slot1}否？愿{slot2}，盼{slot3}。"
-	],
-	"贺寿": [
-		"欣逢{relation}寿辰，{name}特来贺寿：愿{slot1}，{slot2}，{slot3}。",
-		"恭祝{relation}寿辰：愿{slot1}，更愿{slot2}，他日{slot3}。",
-		"贺{relation}华诞：{slot1}，{slot2}，{slot3}。",
-		"恭逢{relation}寿辰，{name}奉书道贺：愿{slot1}，{slot2}，他日{slot3}。",
-		"为{relation}上寿：{slot1}，更愿{slot2}，早日{slot3}。"
-	],
-	"诉苦": [
-		"家中{slot1}，{name}在外求告无门，恳请{relation}{slot2}，{slot3}。",
-		"近来{slot1}，{name}困顿，望{relation}{slot2}，{slot3}。",
-		"向{relation}诉苦：{slot1}，{slot2}，盼{slot3}。",
-		"向{relation}告急：近来{slot1}，恳请{slot2}，盼{slot3}。",
-		"{name}潦倒，家中{slot1}，望{relation}{slot2}，助我{slot3}。"
-	],
-	"求荐": [
-		"欲赴科考，苦无门路。{name}有{slot1}之志，{slot2}之望，恳请{relation}{slot3}。",
-		"{name}求{relation}荐举：{slot1}，{slot2}，{slot3}。",
-		"今有{slot1}，望{relation}{slot2}，{slot3}。",
-		"今有{slot1}，苦无门路，伏望{relation}{slot2}，助我{slot3}。",
-		"今有{slot1}，求{relation}{slot2}，他日{slot3}。"
-	]
-}
-
-# 正文三槽的界面提示词（按信型）：letter.gd 据此生成词库标签与信纸槽位占位符
-const SLOT_HINTS = {
-	"家书": {"slot1": "家中", "slot2": "在外", "slot3": "盼"},
-	"请安": {"slot1": "近况", "slot2": "珍重", "slot3": "盼音"},
-	"贺寿": {"slot1": "福寿", "slot2": "纳福", "slot3": "欢聚"},
-	"诉苦": {"slot1": "处境", "slot2": "求援", "slot3": "盼助"},
-	"求荐": {"slot1": "才学", "slot2": "引荐", "slot3": "成全"}
-}
+# ---------- 内容（运行时从 JSON 加载；变量名保持原样，调用点不用改）----------
+var FIRST_NAMES: Array = []
+var LAST_NAMES: Array = []
+var RELATIONS: Array = []
+var LETTER_TYPES: Array = []
+var SALUTATION_POOL: Dictionary = {}
+var SIGNATURE_POOL: Dictionary = {}
+var BODY_POOLS: Dictionary = {}
+var STORY_TEMPLATES: Dictionary = {}
+var SLOT_HINTS: Dictionary = {}
+var FEEDBACK_PERFECT: Array = []
+var FEEDBACK_GOOD: Array = []
+var FEEDBACK_NORMAL: Array = []
+var FEEDBACK_WRONG: Array = []
 
 const DEFAULT_SLOT_HINTS = {"slot1": "其一", "slot2": "其二", "slot3": "其三"}
 
-const FEEDBACK_PERFECT = ["先生写得真好！", "正是我想说的！", "太感谢了！", "妙极，正是此意！"]
-const FEEDBACK_GOOD = ["不错，再仔细些就更好了", "大体妥当", "尚可，有几处不妥"]
-const FEEDBACK_NORMAL = ["还行吧", "就这样", "可以了", "凑合"]
-const FEEDBACK_WRONG = ["不对不对", "这写的啥？", "重写！", "格式都不对！"]
+## 内容加载失败原因（空字符串 = 加载成功）。verify_content 会断言它为空。
+var content_error: String = ""
+
+
+func _ready() -> void:
+	load_content()
+
+
+## 从 JSON 载入全部内容；结构缺项时视为失败（宁可启动就报错，也不要运行到一半才炸）。
+func load_content() -> bool:
+	content_error = ""
+	if not FileAccess.file_exists(CONTENT_PATH):
+		content_error = "找不到内容文件：%s" % CONTENT_PATH
+		push_error(content_error)
+		return false
+	var text := FileAccess.get_file_as_string(CONTENT_PATH)
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		content_error = "内容文件不是合法 JSON 对象：%s" % CONTENT_PATH
+		push_error(content_error)
+		return false
+
+	var c: Dictionary = parsed
+	FIRST_NAMES = _strings(c.get("first_names", []))
+	LAST_NAMES = _strings(c.get("last_names", []))
+	RELATIONS = _strings(c.get("relations", []))
+	LETTER_TYPES = _strings(c.get("letter_types", []))
+	SALUTATION_POOL = _dict_of(c, "salutation")
+	SIGNATURE_POOL = _dict_of(c, "signature")
+	BODY_POOLS = _dict_of(c, "body")
+	STORY_TEMPLATES = _dict_of(c, "templates")
+	SLOT_HINTS = _dict_of(c, "slot_hints")
+
+	var fb: Dictionary = c.get("feedback", {}) if c.get("feedback", {}) is Dictionary else {}
+	FEEDBACK_PERFECT = _strings(fb.get("perfect", []))
+	FEEDBACK_GOOD = _strings(fb.get("good", []))
+	FEEDBACK_NORMAL = _strings(fb.get("normal", []))
+	FEEDBACK_WRONG = _strings(fb.get("wrong", []))
+
+	var missing: Array = []
+	if FIRST_NAMES.is_empty(): missing.append("first_names")
+	if LAST_NAMES.is_empty(): missing.append("last_names")
+	if RELATIONS.is_empty(): missing.append("relations")
+	if LETTER_TYPES.is_empty(): missing.append("letter_types")
+	if SALUTATION_POOL.is_empty(): missing.append("salutation")
+	if SIGNATURE_POOL.is_empty(): missing.append("signature")
+	if BODY_POOLS.is_empty(): missing.append("body")
+	if STORY_TEMPLATES.is_empty(): missing.append("templates")
+	if SLOT_HINTS.is_empty(): missing.append("slot_hints")
+	if FEEDBACK_PERFECT.is_empty() or FEEDBACK_GOOD.is_empty() \
+			or FEEDBACK_NORMAL.is_empty() or FEEDBACK_WRONG.is_empty():
+		missing.append("feedback")
+	if not missing.is_empty():
+		content_error = "内容文件缺字段：%s" % ", ".join(missing)
+		push_error(content_error)
+		return false
+	return true
+
+
+func is_content_loaded() -> bool:
+	return content_error.is_empty() and not RELATIONS.is_empty()
+
+
+func _strings(v) -> Array:
+	var out: Array = []
+	if v is Array:
+		for item in v:
+			out.append(str(item))
+	return out
+
+
+func _dict_of(d: Dictionary, key: String) -> Dictionary:
+	var v = d.get(key, {})
+	return v if v is Dictionary else {}
+
 
 ## 单调递增的序号，用来保证 npc_id 在**同一进程内绝不重复**。
 ## 旧实现是 `-(unix + randi()%10000)`：同一秒内生成的两个 NPC 有 1/10000 概率撞 id，
@@ -132,6 +116,9 @@ func _next_npc_id() -> int:
 
 
 func generate_random_npc(day: int = 1) -> Dictionary:
+	if not is_content_loaded():
+		push_error("NPC 内容未加载，无法生成委托：%s" % content_error)
+		return {}
 	var npc_id: int = _next_npc_id()
 
 	var first: String = FIRST_NAMES[randi() % FIRST_NAMES.size()]

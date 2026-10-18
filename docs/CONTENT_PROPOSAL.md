@@ -190,7 +190,8 @@ pwsh -File tools\run-godot.ps1 --headless --script res://tools/verify_letter_lay
 
 | 文件 | 改动 |
 |---|---|
-| `scripts/NPCManager.gd` | 四组常量扩充：称谓 3→5/关系、落款 3→4/关系、正文 6→10/槽、模板 16→26 |
+| `scripts/NPCManager.gd` | 四组常量扩充：称谓 3→5/关系、落款 3→4/关系、正文 6→10/槽、模板 16→26；随后（同日）整体迁到 JSON |
+| `data/npc_content.json` | **内容真源**：词库/模板/称谓/落款/提示词/反馈都在这里，`NPCManager.load_content()` 启动加载 |
 | `scenes/letter.tscn` | `WordPanel` 下插入 **`WordScroll`（ScrollContainer，横向滚动禁用）**，`WordVBox` 移入其下 |
 | `scripts/letter.gd` | 节点路径随新结构更新；正文每槽的行容器 `HBoxContainer` → **`HFlowContainer`**（10 词自动换行）|
 | `tools/verify_drop.gd` | 同步新节点路径（旧路径会让脚本取不到节点并**挂住不退出**——实测踩到）|

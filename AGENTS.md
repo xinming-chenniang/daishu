@@ -117,7 +117,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | 单例 | 职责 |
 |---|---|
 | `PlayerManager` | 金钱（初始 100）、天数（1..10）、已完成委托、每日流水、存读档（`user://save.dat`，**完成一单/推进天数/扣摊位费时自动存**）、结局判定（≥500 文 = 成功）|
-| `NPCManager` | 每日生成委托人：姓名、**关系**、正确答案、词库、反馈文本。**NPC id 为负数** |
+| `NPCManager` | 每日生成委托人：姓名、**关系**、正确答案、词库、反馈文本。**NPC id 为负数**。内容全在 `data\npc_content.json`（`load_content()` 启动时加载，改文案只改 JSON）|
 | `JudgeSystem` | 判定与计费，四档（PERFECT/GOOD/NORMAL/WRONG）—— **算钱规则见下方「经济数值」** |
 | `FontFallback` | 启动时给主题字体挂系统字体兜底（`Font.fallbacks` **无法存进 `.tres`**，见 `docs\AI_PLAYBOOK.md`）|
 | `AudioManager` | 全局音频：4 个 UI 音效（播放器池 ×4）+ 2 条循环 BGM（交叉淡化、跨场景延续）+ 静音开关（写 `user://settings.cfg`）。素材由 `tools\gen_sfx.py` / `tools\gen_bgm.py` 合成、可重跑 |
@@ -259,7 +259,7 @@ assets/
                   # icon.png（应用图标，tools\gen_icon.py 生成）/ avatars/<关系>.png
   audio/sfx/      # ui_click / paper_drop / submit / day_end（tools\gen_sfx.py 生成）
   audio/bgm/      # bgm_title / bgm_letter（23 s 循环，tools\gen_bgm.py 生成）
-data/             # art_prompts_round1/2.json（美术生成提示词）
+data/             # npc_content.json（NPC 内容真源）/ art_prompts_round1/2.json（美术提示词）
 docs/             # 设计文档（见第 6 节）
 tools/            # 校验 / 模拟 / 截图 / 环境脚本
 godot-docs/       # Godot 4.6 官方文档语料（gitignore，只读）

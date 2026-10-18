@@ -1,5 +1,5 @@
 {
-  "_comment": "内容扩充方案 A 的最终采纳数据（2026-10-18）。与 scripts/NPCManager.gd 保持一致；改词时两边同步，并跑 tools/verify_content.gd 与 tools/check_content_chars.py。",
+  "_comment": "历史：内容扩充方案 A 的候选/采纳数据（2026-10-18）。**运行时不再读这个文件**——真源已迁到 data/npc_content.json；本文件仅作方案 A 的审阅留档。",
   "body_slots": {
     "家书": {
       "slot1": ["安好", "安康", "平安", "无事", "顺遂", "如意", "康泰", "平顺", "安泰", "清吉"],

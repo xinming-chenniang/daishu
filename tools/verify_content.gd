@@ -31,6 +31,13 @@ func _initialize() -> void:
 		quit(1)
 		return
 
+	# 内容真源是 data/npc_content.json：加载失败时后续断言都会变成"空词库假 PASS"
+	_check(nm.is_content_loaded(), "内容文件已加载（content_error=「%s」）" % str(nm.get("content_error")))
+	if not nm.is_content_loaded():
+		print("=== 结论: FAIL ===（内容未加载，后续统计无意义）")
+		quit(1)
+		return
+
 	var seen_types := {}
 	var seen_relations := {}
 	var seen_salutation := {}
