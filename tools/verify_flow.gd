@@ -60,6 +60,9 @@ func _initialize() -> void:
 	print("=== ⑤ 破产与第 10 天：必须早退（本轮不等帧）===")
 	_case_bankruptcy_and_endgame(pm, nm, main)
 
+	print("=== ⑥ 真实 main 场景：开始今日 → 列表 3 条 → 完成一条 → 2 条 ===")
+	await _case_main_list_integration(pm, nm)
+
 	# 还原真实存档路径并清掉临时档
 	pm.save_path = original_save_path
 	if FileAccess.file_exists(test_save_path):
@@ -181,6 +184,35 @@ func _case_end_day_normal(pm) -> void:
 	_check(pm.day == 2, "结算后进入第 2 日")
 	_check(not pm.is_npc_completed(-12345), "结算后当日完成列表已清空")
 	main_scene.queue_free()
+	await process_frame
+
+
+func _case_main_list_integration(pm, nm) -> void:
+	# 用**真实 main.tscn**（不是 stub）验证"生成委托列表 → 完成一条 → 行消失"这条 UI 链路，
+	# 并确认完成时确实落盘。旧脚本只测过 stub main，列表刷新出问题不会有人发现。
+	pm.reset()
+	var packed: PackedScene = load("res://scenes/main.tscn")
+	var m = packed.instantiate()
+	get_root().add_child(m)
+	for i in range(3):
+		await process_frame
+
+	m._on_start_day_pressed()
+	for i in range(3):
+		await process_frame
+	var list: Node = m.npc_list_container
+	_check(list.get_child_count() == 3, "开始今日后列表 3 条（实测 %d）" % list.get_child_count())
+
+	if nm.current_day_npcs.size() >= 1:
+		var first_id := int(nm.current_day_npcs[0].get("npc_id", 0))
+		m.on_npc_completed(first_id)
+		for i in range(3):
+			await process_frame
+		_check(list.get_child_count() == 2, "完成一条后列表剩 2 条（实测 %d）" % list.get_child_count())
+		_check(pm.is_npc_completed(first_id), "完成的那条已记账")
+		_check(FileAccess.file_exists(pm.save_path), "完成委托时自动写盘")
+
+	m.queue_free()
 	await process_frame
 
 
