@@ -17,12 +17,17 @@ var SIGNATURE_POOL: Dictionary = {}
 var BODY_POOLS: Dictionary = {}
 var STORY_TEMPLATES: Dictionary = {}
 var SLOT_HINTS: Dictionary = {}
+## 信稿结构（每信型的起首语/正文连缀/结尾敬语）+ 落款日期（按天数）
+var LETTER_FORM: Dictionary = {}
+var LETTER_DATES: Array = []
 var FEEDBACK_PERFECT: Array = []
 var FEEDBACK_GOOD: Array = []
 var FEEDBACK_NORMAL: Array = []
 var FEEDBACK_WRONG: Array = []
 
 const DEFAULT_SLOT_HINTS = {"slot1": "其一", "slot2": "其二", "slot3": "其三"}
+## 游戏天数上限（与 PlayerManager.TOTAL_DAYS 一致；这里只用于"日期至少要 10 条"的校验）
+const TOTAL_DAYS_HINT := 10
 
 ## 内容加载失败原因（空字符串 = 加载成功）。verify_content 会断言它为空。
 var content_error: String = ""
@@ -56,6 +61,8 @@ func load_content() -> bool:
 	BODY_POOLS = _dict_of(c, "body")
 	STORY_TEMPLATES = _dict_of(c, "templates")
 	SLOT_HINTS = _dict_of(c, "slot_hints")
+	LETTER_FORM = _dict_of(c, "letter_form")
+	LETTER_DATES = _strings(c.get("dates", []))
 
 	var fb: Dictionary = c.get("feedback", {}) if c.get("feedback", {}) is Dictionary else {}
 	FEEDBACK_PERFECT = _strings(fb.get("perfect", []))
@@ -76,6 +83,16 @@ func load_content() -> bool:
 	if FEEDBACK_PERFECT.is_empty() or FEEDBACK_GOOD.is_empty() \
 			or FEEDBACK_NORMAL.is_empty() or FEEDBACK_WRONG.is_empty():
 		missing.append("feedback")
+	if LETTER_DATES.size() < TOTAL_DAYS_HINT:
+		missing.append("dates（至少要 10 条）")
+	for t in LETTER_TYPES:
+		var form: Dictionary = LETTER_FORM.get(t, {})
+		if form.is_empty() or not form.has("opening") or not form.has("body") or not form.has("closing"):
+			missing.append("letter_form.%s" % t)
+		elif not str(form.get("body", "")).contains("{slot1}") \
+				or not str(form.get("body", "")).contains("{slot2}") \
+				or not str(form.get("body", "")).contains("{slot3}"):
+			missing.append("letter_form.%s.body（缺 {slot1..3}）" % t)
 	if not missing.is_empty():
 		content_error = "内容文件缺字段：%s" % ", ".join(missing)
 		push_error(content_error)
@@ -202,6 +219,18 @@ func get_today_npcs(day: int) -> Array:
 
 func get_slot_hints(letter_type: String) -> Dictionary:
 	return SLOT_HINTS.get(letter_type, DEFAULT_SLOT_HINTS)
+
+## 信稿结构：{opening, body（含 {slot1..3}）, closing}；未知信型返回空字典
+func get_letter_form(letter_type: String) -> Dictionary:
+	var f = LETTER_FORM.get(letter_type, {})
+	return f if f is Dictionary else {}
+
+## 落款日期：第 day 天对应的节气（越界时夹到首尾）
+func get_date_line(day: int) -> String:
+	if LETTER_DATES.is_empty():
+		return ""
+	var idx: int = clampi(day - 1, 0, LETTER_DATES.size() - 1)
+	return str(LETTER_DATES[idx])
 
 func get_npc_by_id(npc_id: int) -> Dictionary:
 	var id_int := int(npc_id)

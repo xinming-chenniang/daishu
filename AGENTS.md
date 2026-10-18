@@ -88,7 +88,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 
 | 命令 | 验什么 | 期望 |
 |---|---|---|
-| `powershell -File tools\verify-all.ps1` | **一次跑全部 `verify_*.gd`**，每个 120 s 超时（超时判失败，不会假挂）| `11/11 通过`、退出码 0 |
+| `powershell -File tools\verify-all.ps1` | **一次跑全部 `verify_*.gd`**，每个 120 s 超时（超时判失败，不会假挂）| `12/12 通过`、退出码 0 |
 | `--script res://tools/verify_drop.gd` | 五槽落词 + 拖拽预览 + 判定 + 键盘/守卫；`--shot-popup x.png` 可截结算弹窗 | `总体: PASS` |
 | `--script res://tools/verify_theme.gd` | 全局 Theme 三查（设置项→资源→控件实际取值）| `结论: PASS` |
 | `--script res://tools/verify_avatar.gd` | 头像关系映射 + 缺字段不崩 | `结论: PASS` |
@@ -99,6 +99,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_cursor.gd` | 毛笔光标素材（尺寸/透明底/热点）+ 设置调用不报错 | `结论: PASS` |
 | `--script res://tools/verify_content.gd` | NPC 数据不变量（正解⊆词库、同槽无重复、故事含正解、报酬公式）+ 字体覆盖 | `结论: PASS` |
 | `--script res://tools/verify_letter_layout.gd` | 代写界面词库布局（5 称谓 / 3×10 正文 / 4 落款、可滚动、不横向溢出）| `结论: PASS` |
+| `--script res://tools/verify_letter_text.gd` | 信稿组装（5 信型起首/连缀/结尾、日期节气、占位、字体覆盖、竖排列数）；`--shot-draft x.png` 截图 | `结论: PASS` |
 | `--script res://tools/verify_shell.gd` | 应用身份（名称/版本/图标）+ 六场景可加载 + 玩法说明可开可关 + 有存档时「开始游戏」必须弹覆盖确认 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>] [--seed N]` | 任意场景截图；`--seed` 固定随机 NPC，供改版前后逐像素对比 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |

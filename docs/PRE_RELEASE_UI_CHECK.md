@@ -382,6 +382,11 @@ godot --path . --script res://tools/verify_drop.gd -- --shot out.png   # 顺便�
 12. ~~结算/日终弹窗可读性~~ ✅ 已完成（2026-10-18）：两处弹窗原来用 `AcceptDialog` 默认深色半透明底 +
     墨色字，**实际几乎看不见**（截图证实）；改为暖纸底 + 朱砂边，`RichTextLabel` 补 `default_color`
     与 `line_separation`，弹窗放大到 460×320；弹窗淡入也交给 `SceneFx`（截图模式直接到终态）。
+13. ~~信稿预览（明代书信格式）~~ ✅ 已完成（2026-10-18）：代写界面新增「信稿」按钮，
+    按 **称谓 → 启事语 → 正文连缀 → 结尾敬语 → 署名 → 节气落款** 组装整封信，
+    **竖排、自右向左**（显示时去标点，因明代书信无句读）；
+    五种信型的起首/连缀/结尾都在 `data/npc_content.json` 的 `letter_form` 里，可改文案不动代码。
+    证据：[`letter_draft.png`](screenshots/ingame/letter_draft.png)；`tools\verify_letter_text.gd` 守结构/占位/字体覆盖/列数。
 
 ### 弹窗视觉证据（全部四个，2026-10-18）
 

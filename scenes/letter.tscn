@@ -340,6 +340,10 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "提交"
 
+[node name="DraftBtn" type="Button" parent="ButtonBar"]
+layout_mode = 2
+text = "信稿"
+
 [node name="ResetBtn" type="Button" parent="ButtonBar" unique_id=1598711313]
 layout_mode = 2
 text = "重新填写"
@@ -368,3 +372,22 @@ theme_override_colors/default_color = Color(0.14, 0.11, 0.07, 1)
 theme_override_constants/line_separation = 5
 bbcode_enabled = true
 text = "（结算结果）"
+[node name="LetterDraftPopup" type="AcceptDialog" parent="."]
+title = "信稿（竖排·自右向左）"
+size = Vector2i(900, 560)
+theme_override_styles/panel = SubResource("StyleBoxFlat_popup")
+
+[node name="Scroll" type="ScrollContainer" parent="LetterDraftPopup"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Columns" type="HBoxContainer" parent="LetterDraftPopup/Scroll"]
+layout_mode = 2
+theme_override_constants/separation = 18

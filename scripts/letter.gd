@@ -19,8 +19,11 @@ extends Control
 @onready var submit_btn: Button = $ButtonBar/SubmitBtn
 @onready var reset_btn: Button = $ButtonBar/ResetBtn
 @onready var back_btn: Button = $ButtonBar/BackBtn
+@onready var draft_btn: Button = $ButtonBar/DraftBtn
 @onready var result_popup: AcceptDialog = $ResultPopup
 @onready var result_label: RichTextLabel = $ResultPopup/ResultLabel
+@onready var draft_popup: AcceptDialog = $LetterDraftPopup
+@onready var draft_columns: HBoxContainer = $LetterDraftPopup/Scroll/Columns
 # 用路径查找而不是裸全局名：--script 模式不注册 autoload（AI_PLAYBOOK 第 1 条）
 @onready var _audio: Node = get_node_or_null("/root/AudioManager")
 
@@ -62,8 +65,10 @@ func _ready() -> void:
 	submit_btn.pressed.connect(_on_submit_pressed)
 	reset_btn.pressed.connect(_on_reset_pressed)
 	back_btn.pressed.connect(_on_back_pressed)
+	draft_btn.pressed.connect(_on_draft_pressed)
 	result_popup.confirmed.connect(_on_result_popup_confirmed)
 	result_popup.get_ok_button().text = "确认"
+	draft_popup.get_ok_button().text = "知道了"
 
 	# 槽位接收拖拽后，更新 player_answers
 	for slot in [salutation_slot, body_slot1, body_slot2, body_slot3, signature_slot]:
@@ -108,6 +113,73 @@ func _to_vertical(s: String) -> String:
 	for i in range(s.length()):
 		lines.append(s[i])
 	return "\n".join(lines)
+
+
+# ---------- 信稿：把五个词组装成一封符合明代书信格式的信 ----------
+# 骨架：称谓 → 启事语 → 正文（三个词按信型连缀）→ 结尾敬语 → 署名 → 落款日期（按天数取节气）
+
+## 信稿各段（每段一列竖排，自右向左）。未填的槽位显示「＿＿＿」，方便对照着补。
+func build_letter_paragraphs() -> Array[String]:
+	var parts: Array[String] = []
+	if current_npc.is_empty():
+		return parts
+	var npc_manager = get_node_or_null("/root/NPCManager")
+	if npc_manager == null:
+		return parts
+	var form: Dictionary = npc_manager.get_letter_form(str(current_npc.get("letter_type", "")))
+	if form.is_empty():
+		return parts
+
+	var body := str(form.get("body", "")).format({
+		"slot1": _answer_or_blank("body_slot1"),
+		"slot2": _answer_or_blank("body_slot2"),
+		"slot3": _answer_or_blank("body_slot3"),
+	})
+	var date_line := str(npc_manager.get_date_line(int(PlayerManager.day)))
+
+	parts.append(_answer_or_blank("salutation") + "：")
+	parts.append(str(form.get("opening", "")))
+	parts.append(body)
+	parts.append(str(form.get("closing", "")))
+	parts.append(_answer_or_blank("signature"))
+	if not date_line.is_empty():
+		parts.append("%s 旅次灯下谨书" % date_line)
+	return parts
+
+func _answer_or_blank(key: String) -> String:
+	var v := str(player_answers.get(key, ""))
+	return v if not v.is_empty() else "＿＿＿"
+
+## 纯文本版（供回归脚本断言）
+func build_letter_text() -> String:
+	return "\n".join(build_letter_paragraphs())
+
+func _on_draft_pressed() -> void:
+	if _audio != null:
+		_audio.play_sfx("ui_click")
+	_fill_draft_columns(build_letter_paragraphs())
+	draft_popup.popup_centered()
+	# HBox 的最小宽度等于列宽之和，alignment=END 在等宽时才看得出来；
+	# 等一帧拿到滚动区尺寸，把列容器撑到可视宽度，信就从纸的右侧起排。
+	await get_tree().process_frame
+	var scroll := draft_popup.get_node_or_null("Scroll") as ScrollContainer
+	if scroll != null and draft_columns != null:
+		draft_columns.custom_minimum_size.x = scroll.size.x
+
+func _fill_draft_columns(parts: Array[String]) -> void:
+	for child in draft_columns.get_children():
+		child.queue_free()
+	# 明代书信不用句读标点；竖排里标点还会各自占一整格，把信断成一截一截。
+	# 所以**显示时**去掉标点（内部文本 build_letter_text 仍带标点，供校验与阅读）。
+	draft_columns.alignment = BoxContainer.ALIGNMENT_END   # 自右向左起排
+	for i in range(parts.size() - 1, -1, -1):
+		var display := parts[i].replace("，", "").replace("。", "").replace("：", "").replace("、", "")
+		var col := Label.new()
+		col.text = _to_vertical(display)
+		col.add_theme_font_size_override("font_size", 22)
+		col.add_theme_color_override("font_color", LETTER_FONT_COLOR)
+		col.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		draft_columns.add_child(col)
 
 # 初始化界面，由主界面调用
 func init_with_npc(npc_id: int) -> void:

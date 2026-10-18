@@ -200,3 +200,36 @@
 | `normal` | `String` | 格式正确但有内容不匹配时使用的反馈文本，搭配 `base_fee`。 |
 | `wrong` | `String` | 存在格式错误（空白或非法词）时使用的反馈文本，搭配按项数扣款。 |
 
+---
+
+## 信稿结构（`data/npc_content.json` 的 `letter_form` / `dates`）
+
+信稿 = 玩家写出来的那封信。骨架固定为明代书信的六段：
+**称谓 → 启事语 → 正文（三个词按信型连缀）→ 结尾敬语 → 署名 → 落款日期**。
+
+```json
+"letter_form": {
+  "求荐": {
+    "opening": "不揣冒昧，敬恳者：",
+    "body": "自惟{slot1}，伏望{slot2}，得遂{slot3}。",
+    "closing": "专此奉恳，伏惟玉成。"
+  }
+},
+"dates": ["白露前三日", "秋分前三日", "寒露前三日", "霜降前三日", "立冬前三日",
+           "小雪前三日", "大雪前三日", "冬至前三日", "小寒前三日", "大寒前三日"]
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `letter_form.<信型>.opening` | `String` | 启事/问候语（称谓之后） |
+| `letter_form.<信型>.body` | `String` | 正文连缀模板，**必须含 `{slot1}`/`{slot2}`/`{slot3}`**，运行时用玩家填的词替换 |
+| `letter_form.<信型>.closing` | `String` | 结尾敬语 |
+| `dates[i]` | `String` | 第 `i+1` 天的落款日期（节气），越界时夹到首尾 |
+
+加载时 `NPCManager.load_content()` 会校验：五种信型齐全、`body` 含三个占位符、`dates` 至少 10 条；
+不满足则 `content_error` 非空并报错。`letter.gd::build_letter_paragraphs()` 负责组装，
+`tools/verify_letter_text.gd` 守住结构与字体覆盖。
+
+> 竖排显示时会**去掉标点**（明代书信本无句读；且竖排里标点会各占一格，把信断碎）。
+> `build_letter_text()` 返回的文本仍带标点，供校验与日志阅读。
+
