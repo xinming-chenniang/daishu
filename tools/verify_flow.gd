@@ -36,6 +36,13 @@ func _initialize() -> void:
 		quit(1)
 		return
 
+	# 自动存档会写 save_path：测试必须指向临时文件，**绝不能碰玩家真实存档**
+	var original_save_path: String = pm.save_path
+	var test_save_path := "user://save_flow_test.dat"
+	pm.save_path = test_save_path
+	if FileAccess.file_exists(test_save_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(test_save_path))
+
 	var main = _make_stub_main()
 
 	print("=== ① 未提交就返回主界面：不许消耗委托 ===")
@@ -52,6 +59,12 @@ func _initialize() -> void:
 
 	print("=== ⑤ 破产与第 10 天：必须早退（本轮不等帧）===")
 	_case_bankruptcy_and_endgame(pm, nm, main)
+
+	# 还原真实存档路径并清掉临时档
+	pm.save_path = original_save_path
+	if FileAccess.file_exists(test_save_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(test_save_path))
+	print("  [OK] 已还原存档路径并清理临时档")
 
 	if _fails.is_empty():
 		print("=== 结论: PASS ===")
@@ -134,6 +147,13 @@ func _case_settle_marks_completed(pm, nm, main) -> void:
 	_check(pm.is_npc_completed(int(npc["npc_id"])), "结算后委托已标记完成")
 	_check(main.completed.has(int(npc["npc_id"])), "结算后已通知主界面移除该委托")
 	_check(letter.is_settled(), "is_settled() 结算后为 true")
+
+	# 自动存档：完成一单后立刻落盘（旧实现只在"保存并退出"时写，关窗口会丢进度）
+	var npc_id := int(npc["npc_id"])
+	_check(FileAccess.file_exists(pm.save_path), "完成委托后自动写盘：%s" % pm.save_path)
+	if FileAccess.file_exists(pm.save_path):
+		var raw := FileAccess.get_file_as_string(pm.save_path)
+		_check(raw.contains(str(npc_id)), "自动存档里含刚完成的委托 id（%d）" % npc_id)
 
 
 func _case_end_day_normal(pm) -> void:

@@ -116,7 +116,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 
 | 单例 | 职责 |
 |---|---|
-| `PlayerManager` | 金钱（初始 100）、天数（1..10）、已完成委托、每日流水、存读档（`user://save.dat`）、结局判定（≥500 文 = 成功）|
+| `PlayerManager` | 金钱（初始 100）、天数（1..10）、已完成委托、每日流水、存读档（`user://save.dat`，**完成一单/推进天数/扣摊位费时自动存**）、结局判定（≥500 文 = 成功）|
 | `NPCManager` | 每日生成委托人：姓名、**关系**、正确答案、词库、反馈文本。**NPC id 为负数** |
 | `JudgeSystem` | 判定与计费，四档（PERFECT/GOOD/NORMAL/WRONG）—— **算钱规则见下方「经济数值」** |
 | `FontFallback` | 启动时给主题字体挂系统字体兜底（`Font.fallbacks` **无法存进 `.tres`**，见 `docs\AI_PLAYBOOK.md`）|

@@ -3,6 +3,11 @@
 `PlayerManager.save()` / `load()` 通过内部的 `get_save_data()` 和 `apply_save_data()` 与磁盘上的 `user://save.dat` 交互。  
 存档文件内容是一个顶层 **JSON 对象**，字段如下：
 
+> **写入时机（2026-10-18 起为自动存档）**：`mark_npc_completed()`（每完成一单）、`next_day()`（天数推进）、
+> `apply_end_of_day_costs()`（扣摊位费，可能破产）三处都会立即 `save()`；
+> 标题页「开始游戏」和主界面「保存并退出」也各写一次。
+> 旧实现只在「保存并退出」时写，玩家中途关窗口会丢掉当天进度。
+
 ```json
 {
   "version": 1,

@@ -50,6 +50,8 @@ func add_money(amount: int) -> bool:
 ## 进入下一天。**返回 true 表示已触发结局**（第 10 天之后），调用方不要再操作本场景的 UI。
 func next_day() -> bool:
 	day += 1
+	# 自动存档：天数一推进就落盘（旧实现只在"保存并退出"时写，中途关窗口就丢进度）
+	save()
 	if day > TOTAL_DAYS:
 		check_endgame()
 		return true
@@ -61,6 +63,8 @@ func is_npc_completed(npc_id: int) -> bool:
 func mark_npc_completed(npc_id: int) -> void:
 	if not completed_npcs.has(npc_id):
 		completed_npcs.append(npc_id)
+		# 自动存档：完成一单就落盘。玩家关窗口/崩溃后，"继续游戏"能回到已完成这一单的状态
+		save()
 
 func reset_completed_npcs() -> void:
 	completed_npcs.clear()
@@ -96,7 +100,10 @@ func get_day_summary() -> Dictionary:
 
 ## 收当日固定支出。返回 true = 交完这笔钱就破产了（调用方应立即停止后续结算）。
 func apply_end_of_day_costs() -> bool:
-	return add_money(-STALL_FEE_PER_DAY)
+	var bankrupt := add_money(-STALL_FEE_PER_DAY)
+	# 自动存档：摊位费扣完（可能直接破产）立刻落盘
+	save()
+	return bankrupt
 
 func reset_day_ledger() -> void:
 	day_ledger.clear()
