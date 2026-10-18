@@ -26,6 +26,13 @@ func _initialize() -> void:
 	get_root().size = Vector2i(1152, 648)
 	await process_frame  # --script 的 _initialize 早于 SceneTree 激活（AI_PLAYBOOK 第 21 条）
 
+	# 可选：截一张"覆盖存档确认弹窗"的图（--shot-confirm <path>，需要非 headless）
+	var shot_confirm := ""
+	var user_args := OS.get_cmdline_user_args()
+	for i in range(user_args.size()):
+		if user_args[i] == "--shot-confirm" and i + 1 < user_args.size():
+			shot_confirm = user_args[i + 1]
+
 	# --- 1. 应用身份 ---
 	var app_name := str(ProjectSettings.get_setting("application/config/name", ""))
 	_check(app_name == EXPECTED_NAME, "config/name = 「%s」（实测「%s」）" % [EXPECTED_NAME, app_name])
@@ -114,6 +121,15 @@ func _initialize() -> void:
 		title._on_start_pressed()
 		await process_frame
 		_check(confirm.visible, "有存档时点「开始游戏」→ 弹出覆盖确认")
+		if not shot_confirm.is_empty():
+			for j in range(3):
+				await process_frame
+			var shot: Image = get_root().get_texture().get_image()
+			if shot != null:
+				shot.save_png(shot_confirm)
+				print("[shot] 已保存 ", shot_confirm)
+			else:
+				print("[shot] 取不到视口图像（headless 下正常）")
 		_check(confirm.dialog_text.contains("覆盖"), "确认文案说明会覆盖进度")
 		_check(confirm.get_ok_button().text == "覆盖并开始", "确认按钮文案为「覆盖并开始」")
 		_check(is_instance_valid(title) and title.is_inside_tree(), "确认前没有切换场景")
