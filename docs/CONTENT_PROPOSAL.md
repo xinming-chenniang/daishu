@@ -172,8 +172,10 @@ node tools/balance_sim.mjs --bonus-mul 0.75 --targets 500,525
 node tools/balance_sim.mjs --games 50000 --stall 12
 node tools/balance_sim.mjs --pool 5,10,4        # 扩充词库后的瞎蒙难度（含与默认的对比）
 
-# 候选字字体覆盖（Python/fontTools，查字体 cmap）
+# 内容用字字体覆盖（Python/fontTools；默认查运行时真源 data/npc_content.json）
 python tools/check_content_chars.py
+# 也可同时查历史候选文件（--json 支持多个）
+python tools/check_content_chars.py --json data/npc_content.json data/content_candidates_2026-10-18.json
 
 # 接入后的数据不变量 + 字体覆盖（Godot 侧，抽样 1200 个 NPC）
 pwsh -File tools\run-godot.ps1 --headless --script res://tools/verify_content.gd
