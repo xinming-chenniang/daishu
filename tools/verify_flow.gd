@@ -155,6 +155,16 @@ func _case_settle_marks_completed(pm, nm, main) -> void:
 		var raw := FileAccess.get_file_as_string(pm.save_path)
 		_check(raw.contains(str(npc_id)), "自动存档里含刚完成的委托 id（%d）" % npc_id)
 
+	# 而且这份自动存档必须能**原样读回**（只写不读的存档等于没有）
+	var saved_money: int = pm.money
+	var saved_day: int = pm.day
+	pm.reset()
+	var loaded: bool = pm.load()
+	_check(loaded, "自动存档可被 load() 读回")
+	_check(pm.money == saved_money and pm.day == saved_day,
+		"读回后金钱/天数一致（%d/%d）" % [saved_money, saved_day])
+	_check(pm.is_npc_completed(npc_id), "读回后完成列表仍含该委托")
+
 
 func _case_end_day_normal(pm) -> void:
 	# 直接调 main.gd 的结算处理器：验证"正常这一天"确实会推进（早退逻辑不能误伤正常路径）
