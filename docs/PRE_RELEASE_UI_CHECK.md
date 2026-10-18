@@ -373,6 +373,10 @@ godot --path . --script res://tools/verify_drop.gd -- --shot out.png   # 顺便�
 7. ~~决定 `MainPanel` 的透明底~~ ✅ 已完成（改为顶栏底板，`0b3c34a`）
 8. ~~显式声明窗口分辨率~~ ✅ 已完成（并修掉了它导致的截图缩放问题）
 9. 加 NPC 头像（可选，但主界面观感提升明显）
+10. ~~加「玩法说明」~~ ✅ 已完成（2026-10-18）：标题页 `HelpButton` + `HelpPopup`（暖纸底、朱砂边、421 字），
+    `tools\verify_shell.gd` 守「可开可关 + 含怎么玩/判定/目标」
+11. ~~应用身份~~ ✅ 已完成（2026-10-18）：`config/name="代书"`、`config/version="0.9.0"`、
+    `config/icon` → `assets/images/ui/icon.png`（`tools\gen_icon.py` 生成，256×256）
 
 **做完 1–4 就能截图了。做完 5–6 才像成品。**
 

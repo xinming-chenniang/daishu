@@ -14,7 +14,9 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="daishu"
+config/name="代书"
+config/version="0.9.0"
+config/icon="res://assets/images/ui/icon.png"
 run/main_scene="res://scenes/title_screen.tscn"
 config/features=PackedStringArray("4.6")
 
