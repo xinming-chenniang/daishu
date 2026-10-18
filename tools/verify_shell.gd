@@ -97,6 +97,40 @@ func _initialize() -> void:
 	await process_frame
 	_check(not popup.visible, "弹窗可关闭")
 
+	# --- 4. 覆盖存档前必须确认（旧实现点「开始游戏」直接 reset+save，进度会丢） ---
+	var pm = get_root().get_node_or_null("PlayerManager")
+	var confirm: ConfirmationDialog = title.get_node_or_null("ConfirmPopup")
+	_check(confirm != null, "存在 ConfirmPopup")
+	if pm != null and confirm != null:
+		# 备份玩家真实存档，测完原样恢复（重定向后 user:// 里可能是真进度）
+		var had_save: bool = pm.has_save()
+		var backup := PackedByteArray()
+		if had_save:
+			backup = FileAccess.get_file_as_bytes(pm.save_path)
+		pm.reset()
+		pm.save()
+		_check(pm.has_save(), "测试用存档已写入")
+
+		title._on_start_pressed()
+		await process_frame
+		_check(confirm.visible, "有存档时点「开始游戏」→ 弹出覆盖确认")
+		_check(confirm.dialog_text.contains("覆盖"), "确认文案说明会覆盖进度")
+		_check(confirm.get_ok_button().text == "覆盖并开始", "确认按钮文案为「覆盖并开始」")
+		_check(is_instance_valid(title) and title.is_inside_tree(), "确认前没有切换场景")
+
+		confirm.hide()
+		await process_frame
+		_check(not confirm.visible, "取消后弹窗关闭")
+
+		# 恢复：有原档就写回，没有就删掉测试档
+		if had_save:
+			var f := FileAccess.open(pm.save_path, FileAccess.WRITE)
+			if f != null:
+				f.store_buffer(backup)
+		else:
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(pm.save_path))
+		_check(pm.has_save() == had_save, "测试后存档状态已恢复（had_save=%s）" % str(had_save))
+
 	_finish()
 
 

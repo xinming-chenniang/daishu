@@ -98,7 +98,7 @@ pwsh -File tools\where-godot.ps1 -Json       # 给其他脚本消费
 | `--script res://tools/verify_cursor.gd` | 毛笔光标素材（尺寸/透明底/热点）+ 设置调用不报错 | `结论: PASS` |
 | `--script res://tools/verify_content.gd` | NPC 数据不变量（正解⊆词库、同槽无重复、故事含正解、报酬公式）+ 字体覆盖 | `结论: PASS` |
 | `--script res://tools/verify_letter_layout.gd` | 代写界面词库布局（5 称谓 / 3×10 正文 / 4 落款、可滚动、不横向溢出）| `结论: PASS` |
-| `--script res://tools/verify_shell.gd` | 应用身份（名称/版本/图标）+ 六场景可加载 + 标题页「玩法说明」可开可关 | `结论: PASS` |
+| `--script res://tools/verify_shell.gd` | 应用身份（名称/版本/图标）+ 六场景可加载 + 玩法说明可开可关 + 有存档时「开始游戏」必须弹覆盖确认 | `结论: PASS` |
 | `--script res://tools/capture_scene.gd -- --scene <名> --out x.png [--click <按钮>] [--seed N]` | 任意场景截图；`--seed` 固定随机 NPC，供改版前后逐像素对比 | 出图**必须 1152×648**，否则脚本报错 |
 | `--script res://tools/probe_geom.gd` | 量贴图绘制区 / 槽位实际矩形 | 判断锚点该写多少 |
 | `node tools/md_structure_check.mjs <file.md>` | Markdown 结构（标题重复/孤儿节/表格）| 改完文档后跑 |

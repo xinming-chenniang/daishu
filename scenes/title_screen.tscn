@@ -136,3 +136,12 @@ title = "玩法说明"
 size = Vector2i(820, 560)
 dialog_autowrap = true
 theme_override_styles/panel = SubResource("StyleBoxFlat_help")
+
+[node name="ConfirmPopup" type="ConfirmationDialog" parent="."]
+title = "开始新游戏？"
+size = Vector2i(560, 220)
+dialog_autowrap = true
+dialog_text = "已有存档。开始新游戏会覆盖现有进度，且无法恢复。"
+ok_button_text = "覆盖并开始"
+cancel_button_text = "取消"
+theme_override_styles/panel = SubResource("StyleBoxFlat_help")
